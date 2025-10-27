@@ -1,0 +1,775 @@
+openapi: 3.0.3
+info:
+  title: CajaClara Transactions API
+  version: 1.0.0
+  description: API para gestión de transacciones (ingresos/gastos) con soporte para registro manual y OCR
+  contact:
+    name: CajaClara Team
+  license:
+    name: MIT
+
+servers:
+  - url: https://api.cajaclara.com
+    description: Production server
+  - url: http://localhost:8000
+    description: Local development server
+
+tags:
+  - name: Transactions
+    description: Operaciones de registro y consulta de transacciones
+  - name: Categories
+    description: Gestión de categorías y reglas automáticas
+  - name: Export
+    description: Exportación de reportes y datos
+
+paths:
+  /api/transactions/manual:
+    post:
+      tags:
+        - Transactions
+      summary: Registrar transacción manual
+      description: Crea una nueva transacción registrada manualmente en 3 toques (monto, categoría, fecha)
+      operationId: createManualTransaction
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateManualTransactionRequest'
+            examples:
+              expense:
+                summary: Gasto de negocio
+                value:
+                  amount: 45000
+                  currency: COP
+                  category_id: cat-cafe
+                  description: Café para oficina
+                  transaction_type: expense
+                  classification: business
+                  transaction_date: '2025-10-27T14:30:00Z'
+              income:
+                summary: Ingreso personal
+                value:
+                  amount: 150000
+                  currency: COP
+                  category_id: cat-services
+                  description: Pago por servicios freelance
+                  transaction_type: income
+                  classification: personal
+                  transaction_date: '2025-10-27T10:15:00Z'
+      responses:
+        '201':
+          description: Transacción registrada exitosamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TransactionResponse'
+        '400':
+          description: Datos inválidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: No autenticado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Entidad no procesable (validación de negocio)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/transactions/ocr:
+    post:
+      tags:
+        - Transactions
+      summary: Registrar transacción por OCR (foto)
+      description: Captura una foto de recibo y extrae monto, fecha y categoría sugerida automáticamente
+      operationId: createOcrTransaction
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/CreateOcrTransactionRequest'
+            examples:
+              receipt:
+                summary: Foto de recibo
+                value:
+                  receipt_image: (binary image file)
+                  transaction_type: expense
+                  classification: business
+      responses:
+        '201':
+          description: Transacción extraída y registrada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OcrTransactionResponse'
+        '400':
+          description: Imagen inválida o no legible
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: No autenticado
+        '413':
+          description: Archivo demasiado grande (máx. 10 MB)
+        '422':
+          description: OCR falló o datos extraídos inválidos
+
+  /api/transactions:
+    get:
+      tags:
+        - Transactions
+      summary: Listar transacciones con filtros
+      description: Obtiene lista paginada de transacciones del usuario con soporte para filtros de rango de fechas, tipo y clasificación
+      operationId: listTransactions
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: start_date
+          in: query
+          description: Fecha inicial (ISO 8601)
+          schema:
+            type: string
+            format: date-time
+        - name: end_date
+          in: query
+          description: Fecha final (ISO 8601)
+          schema:
+            type: string
+            format: date-time
+        - name: transaction_type
+          in: query
+          description: Filtrar por tipo (income, expense)
+          schema:
+            type: string
+            enum: [income, expense]
+        - name: classification
+          in: query
+          description: Filtrar por clasificación (personal, business)
+          schema:
+            type: string
+            enum: [personal, business]
+        - name: category_id
+          in: query
+          description: Filtrar por categoría
+          schema:
+            type: string
+        - name: page
+          in: query
+          description: Número de página (default 1)
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - name: limit
+          in: query
+          description: Registros por página (default 20, máximo 100)
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+      responses:
+        '200':
+          description: Lista de transacciones
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TransactionListResponse'
+        '401':
+          description: No autenticado
+        '422':
+          description: Parámetros inválidos
+
+  /api/transactions/{transaction_id}:
+    get:
+      tags:
+        - Transactions
+      summary: Obtener detalle de transacción
+      description: Devuelve los detalles completos de una transacción específica
+      operationId: getTransaction
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: transaction_id
+          in: path
+          required: true
+          description: ID de la transacción
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Detalle de transacción
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TransactionResponse'
+        '401':
+          description: No autenticado
+        '404':
+          description: Transacción no encontrada
+
+    put:
+      tags:
+        - Transactions
+      summary: Actualizar transacción
+      description: Permite corregir datos de una transacción registrada. Si se corrige categoría, aplica regla automática para futuras transacciones similares.
+      operationId: updateTransaction
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: transaction_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateTransactionRequest'
+      responses:
+        '200':
+          description: Transacción actualizada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TransactionResponse'
+        '400':
+          description: Datos inválidos
+        '401':
+          description: No autenticado
+        '404':
+          description: Transacción no encontrada
+        '422':
+          description: Validación de negocio fallida
+
+    delete:
+      tags:
+        - Transactions
+      summary: Eliminar transacción
+      description: Marca una transacción como eliminada (soft delete para auditoría)
+      operationId: deleteTransaction
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: transaction_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: Transacción eliminada exitosamente
+        '401':
+          description: No autenticado
+        '404':
+          description: Transacción no encontrada
+
+  /api/categories:
+    get:
+      tags:
+        - Categories
+      summary: Listar categorías disponibles
+      description: Obtiene el catálogo de categorías predefinidas, con posibilidad de búsqueda
+      operationId: listCategories
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: transaction_type
+          in: query
+          description: Filtrar por tipo de transacción
+          schema:
+            type: string
+            enum: [income, expense]
+        - name: search
+          in: query
+          description: Búsqueda por nombre o descripción
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Lista de categorías
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  categories:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Category'
+        '401':
+          description: No autenticado
+
+  /api/categories/rules:
+    post:
+      tags:
+        - Categories
+      summary: Crear regla automática de categorización
+      description: Crea una regla para aplicar categoría automáticamente a futuras transacciones que cumplan criterios (ej. palabras clave del vendedor)
+      operationId: createCategoryRule
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateCategoryRuleRequest'
+      responses:
+        '201':
+          description: Regla creada exitosamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CategoryRuleResponse'
+        '400':
+          description: Datos de regla inválidos
+        '401':
+          description: No autenticado
+
+  /api/transactions/export:
+    get:
+      tags:
+        - Export
+      summary: Exportar transacciones
+      description: Genera y descarga reporte de transacciones en formato CSV o PDF
+      operationId: exportTransactions
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: format
+          in: query
+          required: true
+          description: Formato de exportación
+          schema:
+            type: string
+            enum: [csv, pdf]
+        - name: start_date
+          in: query
+          schema:
+            type: string
+            format: date-time
+        - name: end_date
+          in: query
+          schema:
+            type: string
+            format: date-time
+        - name: classification
+          in: query
+          description: Filtrar por clasificación (personal, business, all)
+          schema:
+            type: string
+            enum: [personal, business, all]
+            default: all
+      responses:
+        '200':
+          description: Archivo descargable
+          content:
+            text/csv:
+              schema:
+                type: string
+                format: binary
+            application/pdf:
+              schema:
+                type: string
+                format: binary
+        '400':
+          description: Parámetros inválidos
+        '401':
+          description: No autenticado
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: Token JWT en header Authorization
+
+  schemas:
+    # ========== Request Schemas ==========
+    CreateManualTransactionRequest:
+      type: object
+      required:
+        - amount
+        - currency
+        - category_id
+        - transaction_type
+        - classification
+        - transaction_date
+      properties:
+        amount:
+          type: number
+          format: double
+          minimum: 0.01
+          description: Monto de la transacción
+          example: 45000
+        currency:
+          type: string
+          enum: [COP, USD, EUR]
+          default: COP
+          description: Moneda (ISO 4217)
+        category_id:
+          type: string
+          description: ID de la categoría predefinida
+          example: cat-cafe
+        description:
+          type: string
+          maxLength: 500
+          description: Descripción o nota de la transacción
+          example: Café para oficina
+        transaction_type:
+          type: string
+          enum: [income, expense]
+          description: Tipo de transacción
+        classification:
+          type: string
+          enum: [personal, business]
+          description: Clasificación (personal o negocio)
+        transaction_date:
+          type: string
+          format: date-time
+          description: Fecha y hora de la transacción
+        tags:
+          type: array
+          items:
+            type: string
+          description: Etiquetas adicionales (opcional)
+          example: [trabajo, urgente]
+
+    CreateOcrTransactionRequest:
+      type: object
+      required:
+        - receipt_image
+        - transaction_type
+        - classification
+      properties:
+        receipt_image:
+          type: string
+          format: binary
+          description: Foto del recibo (JPG, PNG, máx. 10 MB)
+        transaction_type:
+          type: string
+          enum: [income, expense]
+          description: Tipo de transacción esperada
+        classification:
+          type: string
+          enum: [personal, business]
+        description:
+          type: string
+          maxLength: 500
+          description: Nota adicional opcional
+        tags:
+          type: array
+          items:
+            type: string
+
+    UpdateTransactionRequest:
+      type: object
+      properties:
+        amount:
+          type: number
+          format: double
+          minimum: 0.01
+        category_id:
+          type: string
+        description:
+          type: string
+          maxLength: 500
+        transaction_date:
+          type: string
+          format: date-time
+        classification:
+          type: string
+          enum: [personal, business]
+        tags:
+          type: array
+          items:
+            type: string
+
+    CreateCategoryRuleRequest:
+      type: object
+      required:
+        - rule_name
+        - category_id
+        - matching_criteria
+      properties:
+        rule_name:
+          type: string
+          maxLength: 100
+          description: Nombre descriptivo de la regla
+          example: Cafeterías locales
+        category_id:
+          type: string
+          description: Categoría a aplicar automáticamente
+        matching_criteria:
+          type: object
+          description: Criterios para aplicar la regla
+          properties:
+            keywords:
+              type: array
+              items:
+                type: string
+              description: Palabras clave a buscar en descripción (OR)
+              example: [café, coffee, starbucks]
+            min_amount:
+              type: number
+              format: double
+              description: Monto mínimo (opcional)
+            max_amount:
+              type: number
+              format: double
+              description: Monto máximo (opcional)
+            vendor_patterns:
+              type: array
+              items:
+                type: string
+              description: Patrones de nombres de vendedor
+        enabled:
+          type: boolean
+          default: true
+          description: Si la regla está activa
+
+    # ========== Response Schemas ==========
+    TransactionResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: ID único de la transacción
+        user_id:
+          type: string
+          format: uuid
+          description: ID del usuario propietario
+        amount:
+          type: number
+          format: double
+        currency:
+          type: string
+        category:
+          $ref: '#/components/schemas/Category'
+        description:
+          type: string
+        transaction_type:
+          type: string
+          enum: [income, expense]
+        classification:
+          type: string
+          enum: [personal, business]
+        transaction_date:
+          type: string
+          format: date-time
+        created_at:
+          type: string
+          format: date-time
+          description: Timestamp de creación
+        updated_at:
+          type: string
+          format: date-time
+          description: Timestamp de última actualización
+        sync_status:
+          type: string
+          enum: [pending, synced, failed]
+          description: Estado de sincronización (offline-first)
+        tags:
+          type: array
+          items:
+            type: string
+        metadata:
+          type: object
+          description: Datos adicionales (ej. fuente OCR, confianza)
+          properties:
+            source:
+              type: string
+              enum: [manual, ocr, api_import]
+            ocr_confidence:
+              type: number
+              format: double
+              description: Confianza de extracción OCR (0-1)
+
+    OcrTransactionResponse:
+      allOf:
+        - $ref: '#/components/schemas/TransactionResponse'
+        - type: object
+          properties:
+            ocr_details:
+              type: object
+              description: Detalles de la extracción OCR
+              properties:
+                extracted_text:
+                  type: string
+                  description: Texto completo extraído del recibo
+                monto_extracted:
+                  type: number
+                  format: double
+                  description: Monto detectado
+                monto_confidence:
+                  type: number
+                  format: double
+                  minimum: 0
+                  maximum: 1
+                fecha_extracted:
+                  type: string
+                  format: date-time
+                  description: Fecha detectada
+                fecha_confidence:
+                  type: number
+                  format: double
+                category_suggested:
+                  type: string
+                  description: Categoría sugerida por modelo
+                category_confidence:
+                  type: number
+                  format: double
+                vendor_detected:
+                  type: string
+                  description: Nombre del comerciante detectado
+
+    TransactionListResponse:
+      type: object
+      properties:
+        transactions:
+          type: array
+          items:
+            $ref: '#/components/schemas/TransactionResponse'
+        pagination:
+          type: object
+          properties:
+            page:
+              type: integer
+            limit:
+              type: integer
+            total:
+              type: integer
+              description: Total de registros
+            total_pages:
+              type: integer
+        summary:
+          type: object
+          description: Resumen de transacciones en el rango
+          properties:
+            total_income:
+              type: number
+              format: double
+            total_expense:
+              type: number
+              format: double
+            net_balance:
+              type: number
+              format: double
+            by_classification:
+              type: object
+              properties:
+                personal:
+                  type: object
+                  properties:
+                    income:
+                      type: number
+                      format: double
+                    expense:
+                      type: number
+                      format: double
+                business:
+                  type: object
+                  properties:
+                    income:
+                      type: number
+                      format: double
+                    expense:
+                      type: number
+                      format: double
+
+    Category:
+      type: object
+      properties:
+        id:
+          type: string
+          description: ID único de categoría
+        name:
+          type: string
+          description: Nombre de categoría
+        icon:
+          type: string
+          description: Código/nombre de icono
+        color:
+          type: string
+          format: hex-color
+          description: Color hexadecimal para UI
+        transaction_type:
+          type: string
+          enum: [income, expense]
+        description:
+          type: string
+        predefined:
+          type: boolean
+          description: Si es categoría del sistema o personalizada
+
+    CategoryRuleResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        user_id:
+          type: string
+          format: uuid
+        rule_name:
+          type: string
+        category_id:
+          type: string
+        matching_criteria:
+          type: object
+        enabled:
+          type: boolean
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+        times_applied:
+          type: integer
+          description: Número de veces que se ha aplicado esta regla
+
+    ErrorResponse:
+      type: object
+      required:
+        - code
+        - message
+      properties:
+        code:
+          type: string
+          description: Código de error
+          example: INVALID_AMOUNT
+        message:
+          type: string
+          description: Mensaje de error legible
+          example: El monto debe ser mayor a 0
+        details:
+          type: object
+          description: Detalles adicionales del error (opcional)
+          example:
+            field: amount
+            constraint: minimum
+        timestamp:
+          type: string
+          format: date-time
