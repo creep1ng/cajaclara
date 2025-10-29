@@ -3,24 +3,28 @@ Endpoints para gestión de transacciones.
 """
 
 from datetime import datetime
+from typing import Optional
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, Query, status
-from sqlalchemy.ext.asyncio import AsyncSession
-
+import sqlalchemy as sa
 from app.api.deps import get_default_user
+from app.core.exceptions import ValidationError
 from app.db.database import get_db
 from app.models.user import User
 from app.repositories.category import CategoryRepository
 from app.repositories.transaction import TransactionRepository
-from app.schemas.transaction import (
-    CreateManualTransactionRequest,
-    TransactionFilters,
-    TransactionListResponse,
-    TransactionResponse,
-    UpdateTransactionRequest,
-)
+from app.schemas.transaction import (CreateManualTransactionRequest,
+                                     CreateOcrTransactionRequest,
+                                     OcrDetailsResponse,
+                                     OcrTransactionResponse,
+                                     TransactionFilters,
+                                     TransactionListResponse,
+                                     TransactionResponse,
+                                     UpdateTransactionRequest)
+from app.services.ocr_service import OCRService
 from app.services.transaction import TransactionService
+from fastapi import APIRouter, Depends, File, Form, Query, UploadFile, status
+from sqlalchemy.ext.asyncio import AsyncSession
 
 router = APIRouter(prefix="/transactions", tags=["Transactions"])
 
@@ -62,7 +66,7 @@ async def create_manual_transaction(
 
     # Crear transacción
     return await transaction_service.create_manual_transaction(
-        user_id=current_user.id, data=data
+        user_id=UUID(str(current_user.id)), data=data
     )
 
 
@@ -122,7 +126,7 @@ async def list_transactions(
 
     # Listar transacciones
     result = await transaction_service.list_transactions(
-        user_id=current_user.id, filters=filters, page=page, limit=limit
+        user_id=UUID(str(current_user.id)), filters=filters, page=page, limit=limit
     )
 
     return TransactionListResponse(
@@ -166,7 +170,7 @@ async def get_transaction(
 
     # Obtener transacción
     return await transaction_service.get_transaction(
-        transaction_id=transaction_id, user_id=current_user.id
+        transaction_id=transaction_id, user_id=UUID(str(current_user.id))
     )
 
 
@@ -208,7 +212,7 @@ async def update_transaction(
     # Actualizar transacción
     return await transaction_service.update_transaction(
         transaction_id=transaction_id,
-        user_id=current_user.id,
+        user_id=UUID(str(current_user.id)),
         data=data.model_dump(exclude_unset=True),
     )
 
@@ -244,5 +248,144 @@ async def delete_transaction(
 
     # Eliminar transacción
     await transaction_service.delete_transaction(
-        transaction_id=transaction_id, user_id=current_user.id
+        transaction_id=transaction_id, user_id=UUID(str(current_user.id))
     )
+
+
+@router.post(
+    "/ocr",
+    response_model=OcrTransactionResponse,
+    status_code=status.HTTP_201_CREATED,
+    summary="Registrar transacción por OCR (foto)",
+    description="Captura una foto de recibo y extrae monto, fecha y categoría sugerida automáticamente",
+)
+async def create_ocr_transaction(
+    receipt_image: UploadFile = File(..., description="Foto del recibo (JPG, PNG, máx. 10 MB)"),
+    transaction_type: str = Form(..., regex="^(income|expense)$"),
+    classification: str = Form(..., regex="^(personal|business)$"),
+    description: str = Form(None, max_length=500),
+    tags: str = Form(None),
+    current_user: User = Depends(get_default_user),
+    db: AsyncSession = Depends(get_db),
+) -> OcrTransactionResponse:
+    """
+    Crea una transacción usando OCR para extraer datos de una imagen.
+
+    Args:
+        receipt_image: Archivo de imagen del recibo
+        transaction_type: Tipo de transacción (income/expense)
+        classification: Clasificación (personal/business)
+        description: Descripción opcional
+        tags: Etiquetas opcionales (separadas por comas)
+        current_user: Usuario actual
+        db: Sesión de base de datos
+
+    Returns:
+        Transacción creada con detalles del procesamiento OCR
+
+    Raises:
+        ValidationError: Si la imagen es inválida o no se pueden extraer datos
+        OcrProcessingError: Si hay error en el procesamiento OCR
+    """
+    # Validar archivo
+    if receipt_image.content_type and not receipt_image.content_type.startswith('image/'):
+        raise ValidationError(
+            code="INVALID_FILE_TYPE",
+            message="El archivo debe ser una imagen (JPG, PNG, WebP)"
+        )
+    
+    if receipt_image.size and receipt_image.size > 10 * 1024 * 1024:  # 10MB
+        raise ValidationError(
+            code="FILE_TOO_LARGE",
+            message="La imagen no puede superar los 10 MB"
+        )
+
+    # Inicializar servicios
+    transaction_repo = TransactionRepository(db)
+    category_repo = CategoryRepository(db)
+    transaction_service = TransactionService(
+        transaction_repo=transaction_repo, category_repo=category_repo
+    )
+
+    # Procesar imagen con OCR
+    async with OCRService() as ocr_service:
+        image_data = await receipt_image.read()
+        ocr_result = await ocr_service.process_receipt_image(
+            image_data=image_data,
+            transaction_type=transaction_type,
+            classification=classification
+        )
+
+    # Preparar datos para la transacción
+    parsed_data = ocr_result["parsed_data"]
+    
+    # Buscar categoría sugerida si existe
+    category_id: Optional[str] = None
+    if parsed_data.get("category_suggested"):
+        # Buscar categoría por nombre o ID
+        categories = await category_repo.list_by_type(
+            transaction_type=transaction_type
+        )
+        for cat in categories:
+            if cat.name.lower() == parsed_data["category_suggested"].lower():
+                category_id = str(cat.id)
+                break
+    
+    # Si no se encontró categoría, usar una por defecto según el tipo
+    if not category_id:
+        if transaction_type == "expense":
+            category_id = "cat-other-expense"  # Categoría por defecto para gastos
+        else:
+            category_id = "cat-other-income"   # Categoría por defecto para ingresos
+
+    # Crear transacción con datos extraídos
+    transaction_data = {
+        "amount": parsed_data.get("amount"),
+        "currency": "COP",
+        "category_id": category_id,
+        "description": description or parsed_data.get("vendor"),
+        "transaction_type": transaction_type,
+        "classification": classification,
+        "transaction_date": (
+            datetime.fromisoformat(parsed_data["transaction_date"])
+            if parsed_data.get("transaction_date")
+            else datetime.now()
+        ),
+        "tags": tags.split(',') if tags else None,
+        "metadata": {
+            "source": "ocr",
+            "ocr_confidence": parsed_data.get("confidence", 0.0),
+            "extracted_text": ocr_result["extracted_text"],
+            "vendor_detected": parsed_data.get("vendor"),
+            "amount_confidence": parsed_data.get("amount_confidence", 0.0),
+            "date_confidence": parsed_data.get("date_confidence", 0.0),
+            "category_confidence": parsed_data.get("category_confidence", 0.0)
+        }
+    }
+
+    # Crear transacción
+    transaction = await transaction_service.create_manual_transaction(
+        user_id=UUID(str(current_user.id)),
+        data=CreateManualTransactionRequest(**transaction_data)
+    )
+
+    # Construir respuesta con detalles OCR
+    ocr_details = OcrDetailsResponse(
+        extracted_text=ocr_result["extracted_text"],
+        amount_extracted=parsed_data.get("amount"),
+        amount_confidence=parsed_data.get("amount_confidence", 0.0),
+        fecha_extracted=parsed_data.get("transaction_date"),
+        fecha_confidence=parsed_data.get("date_confidence", 0.0),
+        category_suggested=parsed_data.get("category_suggested"),
+        category_confidence=parsed_data.get("category_confidence", 0.0),
+        vendor_detected=parsed_data.get("vendor"),
+        vendor_confidence=parsed_data.get("vendor_confidence", 0.0)
+    )
+
+    # Crear respuesta combinando transacción y detalles OCR
+    response_data = transaction.dict()
+    response_data["ocr_details"] = ocr_details.dict()
+    
+    return OcrTransactionResponse(**response_data)
+    
+    return OcrTransactionResponse(**response_data)

@@ -66,9 +66,15 @@ class Settings(BaseSettings):
         description="Confianza mínima para aceptar extracción OCR"
     )
     OCR_MAX_IMAGE_SIZE_MB: int = Field(default=10, ge=1, le=20)
-    OCR_ALLOWED_FORMATS: List[str] = Field(
-        default=["image/jpeg", "image/png", "image/jpg", "image/webp"]
+    OCR_ALLOWED_FORMATS: str = Field(
+        default="image/jpeg,image/png,image/jpg,image/webp",
+        description="Formatos de imagen permitidos para OCR (separados por coma)"
     )
+    
+    @property
+    def ocr_allowed_formats_list(self) -> List[str]:
+        """Parse OCR allowed formats from string"""
+        return [fmt.strip() for fmt in self.OCR_ALLOWED_FORMATS.split(",") if fmt.strip()]
     
     # Pagination
     DEFAULT_PAGE_SIZE: int = Field(default=20, ge=1, le=100)

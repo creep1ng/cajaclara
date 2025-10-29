@@ -112,3 +112,33 @@ class TransactionListResponse(BaseModel):
     transactions: List[TransactionResponse]
     pagination: PaginationInfo
     summary: TransactionSummary
+
+
+class CreateOcrTransactionRequest(BaseModel):
+    """Schema para crear transacción por OCR"""
+    
+    receipt_image: bytes = Field(..., description="Imagen del recibo en bytes")
+    transaction_type: str = Field(pattern="^(income|expense)$")
+    classification: str = Field(pattern="^(personal|business)$")
+    description: Optional[str] = Field(None, max_length=500)
+    tags: Optional[List[str]] = None
+
+
+class OcrDetailsResponse(BaseModel):
+    """Detalles del procesamiento OCR"""
+    
+    extracted_text: str = Field(description="Texto completo extraído del recibo")
+    amount_extracted: Optional[Decimal] = Field(None, description="Monto detectado")
+    amount_confidence: float = Field(ge=0.0, le=1.0, description="Confianza del monto")
+    fecha_extracted: Optional[str] = Field(None, description="Fecha detectada")
+    fecha_confidence: float = Field(ge=0.0, le=1.0, description="Confianza de la fecha")
+    category_suggested: Optional[str] = Field(None, description="Categoría sugerida")
+    category_confidence: float = Field(ge=0.0, le=1.0, description="Confianza de la categoría")
+    vendor_detected: Optional[str] = Field(None, description="Nombre del comerciante detectado")
+    vendor_confidence: float = Field(ge=0.0, le=1.0, description="Confianza del vendedor")
+
+
+class OcrTransactionResponse(TransactionResponse):
+    """Respuesta de transacción creada por OCR con detalles adicionales"""
+    
+    ocr_details: OcrDetailsResponse = Field(description="Detalles del procesamiento OCR")
