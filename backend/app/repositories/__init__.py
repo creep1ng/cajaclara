@@ -2,6 +2,7 @@
 Exportación de todos los repositorios.
 """
 
+from app.repositories.bank_account import BankAccountRepository
 from app.repositories.base import BaseRepository
 from app.repositories.category import CategoryRepository
 from app.repositories.category_rule import CategoryRuleRepository
@@ -14,4 +15,5 @@ __all__ = [
     "CategoryRepository",
     "TransactionRepository",
     "CategoryRuleRepository",
+    "BankAccountRepository",
 ]

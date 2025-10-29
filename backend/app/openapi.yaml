@@ -19,6 +19,8 @@ tags:
     description: Operaciones de registro y consulta de transacciones
   - name: Categories
     description: Gestión de categorías y reglas automáticas
+  - name: Bank Accounts
+    description: Gestión de cuentas bancarias de los usuarios
   - name: Export
     description: Exportación de reportes y datos
 
@@ -281,6 +283,137 @@ paths:
           description: No autenticado
         '404':
           description: Transacción no encontrada
+
+  /api/bank-accounts:
+    get:
+      tags:
+        - Bank Accounts
+      summary: Listar cuentas bancarias
+      description: Obtiene todas las cuentas bancarias registradas por el usuario
+      operationId: listBankAccounts
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Lista de cuentas bancarias
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BankAccountListResponse'
+        '401':
+          description: No autenticado
+    post:
+      tags:
+        - Bank Accounts
+      summary: Crear cuenta bancaria
+      description: Registra una nueva cuenta bancaria con nombre, color y saldo inicial
+      operationId: createBankAccount
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateBankAccountRequest'
+      responses:
+        '201':
+          description: Cuenta bancaria creada exitosamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BankAccountResponse'
+        '401':
+          description: No autenticado
+        '422':
+          description: Datos inválidos
+
+  /api/bank-accounts/{bank_account_id}:
+    get:
+      tags:
+        - Bank Accounts
+      summary: Obtener cuenta bancaria
+      description: Devuelve los detalles de una cuenta bancaria específica
+      operationId: getBankAccount
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: bank_account_id
+          in: path
+          required: true
+          description: ID de la cuenta bancaria
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Detalle de cuenta bancaria
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BankAccountResponse'
+        '401':
+          description: No autenticado
+        '404':
+          description: Cuenta no encontrada
+
+    put:
+      tags:
+        - Bank Accounts
+      summary: Actualizar cuenta bancaria
+      description: Permite editar nombre, color y saldos de una cuenta bancaria
+      operationId: updateBankAccount
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: bank_account_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateBankAccountRequest'
+      responses:
+        '200':
+          description: Cuenta bancaria actualizada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BankAccountResponse'
+        '401':
+          description: No autenticado
+        '404':
+          description: Cuenta no encontrada
+        '422':
+          description: Validación de negocio fallida
+
+    delete:
+      tags:
+        - Bank Accounts
+      summary: Eliminar cuenta bancaria
+      description: Elimina una cuenta bancaria del usuario
+      operationId: deleteBankAccount
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: bank_account_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: Cuenta bancaria eliminada exitosamente
+        '401':
+          description: No autenticado
+        '404':
+          description: Cuenta no encontrada
 
   /api/categories:
     get:
@@ -548,7 +681,99 @@ components:
           default: true
           description: Si la regla está activa
 
+    CreateBankAccountRequest:
+      type: object
+      required:
+        - name
+        - color
+        - initial_balance
+      properties:
+        name:
+          type: string
+          maxLength: 100
+          description: Nombre visible de la cuenta bancaria
+          example: Cuenta Nómina
+        color:
+          type: string
+          pattern: '^#[0-9A-Fa-f]{6}$'
+          description: Color hexadecimal para representar la cuenta
+          example: '#1ABC9C'
+        initial_balance:
+          type: number
+          format: double
+          minimum: 0
+          description: Saldo inicial registrado
+          example: 500000
+        current_balance:
+          type: number
+          format: double
+          minimum: 0
+          description: Saldo actual (si se omite, será igual al saldo inicial)
+
+    UpdateBankAccountRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          maxLength: 100
+        color:
+          type: string
+          pattern: '^#[0-9A-Fa-f]{6}$'
+        initial_balance:
+          type: number
+          format: double
+          minimum: 0
+        current_balance:
+          type: number
+          format: double
+          minimum: 0
+
     # ========== Response Schemas ==========
+    BankAccountResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: ID único de la cuenta bancaria
+        user_id:
+          type: string
+          format: uuid
+          description: ID del usuario propietario
+        name:
+          type: string
+          description: Nombre visible de la cuenta
+        color:
+          type: string
+          description: Color hexadecimal para UI
+        initial_balance:
+          type: number
+          format: double
+          description: Saldo inicial registrado
+        current_balance:
+          type: number
+          format: double
+          description: Saldo actual de la cuenta
+        created_at:
+          type: string
+          format: date-time
+          description: Fecha de creación
+        updated_at:
+          type: string
+          format: date-time
+          description: Fecha de última actualización
+
+    BankAccountListResponse:
+      type: object
+      properties:
+        accounts:
+          type: array
+          items:
+            $ref: '#/components/schemas/BankAccountResponse'
+        total:
+          type: integer
+          description: Total de cuentas encontradas
+
     TransactionResponse:
       type: object
       properties:

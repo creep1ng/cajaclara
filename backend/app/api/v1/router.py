@@ -2,7 +2,7 @@
 Router principal de la API v1.
 """
 
-from app.api.v1.endpoints import categories, ocr, transactions
+from app.api.v1.endpoints import bank_accounts, categories, ocr, transactions
 from app.routes import auth
 from fastapi import APIRouter
 
@@ -13,3 +13,4 @@ api_router.include_router(auth.router, prefix="/auth", tags=["Authentication"])
 api_router.include_router(transactions.router)
 api_router.include_router(categories.router)
 api_router.include_router(ocr.router)
+api_router.include_router(bank_accounts.router)
