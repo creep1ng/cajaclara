@@ -40,6 +40,8 @@ export default function ManualRecordModal({ isOpen, onClose, onSuccess }) {
         payment_type: 'cash',
         payment_status: 'cleared',
         transaction_date: '',
+        from_account: 'cash',
+        to_account: 'savings',
     });
 
     // Inicializar fecha/hora actual
@@ -102,13 +104,29 @@ export default function ManualRecordModal({ isOpen, onClose, onSuccess }) {
             showNotification('Por favor ingresa un monto válido', 'error');
             return false;
         }
-        if (!formData.account) {
-            showNotification('Por favor selecciona una cuenta', 'error');
-            return false;
-        }
-        if (!formData.category_id) {
-            showNotification('Por favor selecciona una categoría', 'error');
-            return false;
+
+        if (activeType === 'transfer') {
+            if (!formData.from_account) {
+                showNotification('Por favor selecciona una cuenta de salida', 'error');
+                return false;
+            }
+            if (!formData.to_account) {
+                showNotification('Por favor selecciona una cuenta de entrada', 'error');
+                return false;
+            }
+            if (formData.from_account === formData.to_account) {
+                showNotification('La cuenta de salida y entrada no pueden ser iguales', 'error');
+                return false;
+            }
+        } else {
+            if (!formData.account) {
+                showNotification('Por favor selecciona una cuenta', 'error');
+                return false;
+            }
+            if (!formData.category_id) {
+                showNotification('Por favor selecciona una categoría', 'error');
+                return false;
+            }
         }
         return true;
     };
@@ -121,13 +139,20 @@ export default function ManualRecordModal({ isOpen, onClose, onSuccess }) {
             const transactionData = {
                 amount: parseFloat(formData.amount),
                 currency: 'COP',
-                category_id: formData.category_id,
                 description: formData.description || undefined,
                 transaction_type: activeType,
                 classification: 'personal', // Por ahora, hardcoded
                 transaction_date: new Date(formData.transaction_date).toISOString(),
                 tags: labels.length > 0 ? labels : undefined,
             };
+
+            // Agregar campos específicos según el tipo de transacción
+            if (activeType === 'transfer') {
+                transactionData.from_account = formData.from_account;
+                transactionData.to_account = formData.to_account;
+            } else {
+                transactionData.category_id = formData.category_id;
+            }
 
             await createTransaction(transactionData);
             showNotification('✅ Registro agregado exitosamente', 'success');
@@ -147,6 +172,8 @@ export default function ManualRecordModal({ isOpen, onClose, onSuccess }) {
                     payment_type: 'cash',
                     payment_status: 'cleared',
                     transaction_date: formData.transaction_date,
+                    from_account: 'cash',
+                    to_account: 'savings',
                 });
                 setLabels([]);
             } else {
@@ -185,13 +212,14 @@ export default function ManualRecordModal({ isOpen, onClose, onSuccess }) {
                 <h2 className="manual-record-title">Registro Manual</h2>
                 <div className="record-tabs">
                     {TRANSACTION_TYPES.map((type) => (
-                        <div
+                        <button
                             key={type.id}
-                            className={`record-tab ${activeType === type.id ? 'active' : ''}`}
+                            className={`btn record-tab-btn ${activeType === type.id ? 'active' : ''}`}
                             onClick={() => handleTypeChange(type.id)}
+                            disabled={loading}
                         >
                             {type.label}
-                        </div>
+                        </button>
                     ))}
                 </div>
             </div>
@@ -219,63 +247,112 @@ export default function ManualRecordModal({ isOpen, onClose, onSuccess }) {
                         </div>
                     </div>
 
-                    {/* Cuenta */}
-                    <div className="form-group">
-                        <label className="form-label">
-                            Cuenta <span className="required">*</span>
-                        </label>
-                        <div className="select-wrapper">
-                            <select
-                                name="account"
-                                className="form-select"
-                                value={formData.account}
-                                onChange={handleChange}
-                                disabled={loading}
-                            >
-                                <option value="cash">Efectivo</option>
-                                <option value="savings">Ahorros</option>
-                                <option value="checking">Corriente</option>
-                                <option value="credit">Tarjeta de Crédito</option>
-                            </select>
-                        </div>
-                    </div>
-
-                    {/* Categoría */}
-                    <div className="form-group">
-                        <label className="form-label">
-                            Categoría <span className="required">*</span>
-                        </label>
-                        <div className="select-wrapper">
-                            <select
-                                name="category_id"
-                                className="form-select"
-                                value={formData.category_id}
-                                onChange={handleChange}
-                                disabled={loading}
-                            >
-                                <option value="">Seleccionar categoría</option>
-                                {typeCategories.map((cat) => (
-                                    <option key={cat.id} value={cat.id}>
-                                        {cat.name}
-                                    </option>
-                                ))}
-                            </select>
-                        </div>
-
-                        {/* Category Pills */}
-                        <div className="category-pills">
-                            {typeCategories.slice(0, 6).map((cat) => (
-                                <div
-                                    key={cat.id}
-                                    className={`category-pill ${formData.category_id === cat.id ? 'selected' : ''
-                                        }`}
-                                    onClick={() => handleCategorySelect(cat.id)}
+                    {/* Cuenta - Solo para Gasto e Ingreso */}
+                    {activeType !== 'transfer' && (
+                        <div className="form-group">
+                            <label className="form-label">
+                                Cuenta <span className="required">*</span>
+                            </label>
+                            <div className="select-wrapper">
+                                <select
+                                    name="account"
+                                    className="form-select"
+                                    value={formData.account}
+                                    onChange={handleChange}
+                                    disabled={loading}
                                 >
-                                    {cat.name}
-                                </div>
-                            ))}
+                                    <option value="cash">Efectivo</option>
+                                    <option value="savings">Ahorros</option>
+                                    <option value="checking">Corriente</option>
+                                    <option value="credit">Tarjeta de Crédito</option>
+                                </select>
+                            </div>
                         </div>
-                    </div>
+                    )}
+
+                    {/* Cuentas de Transferencia - Solo para Transferencia */}
+                    {activeType === 'transfer' && (
+                        <>
+                            <div className="form-group">
+                                <label className="form-label">
+                                    Cuenta de Salida <span className="required">*</span>
+                                </label>
+                                <div className="select-wrapper">
+                                    <select
+                                        name="from_account"
+                                        className="form-select"
+                                        value={formData.from_account}
+                                        onChange={handleChange}
+                                        disabled={loading}
+                                    >
+                                        <option value="cash">Efectivo</option>
+                                        <option value="savings">Ahorros</option>
+                                        <option value="checking">Corriente</option>
+                                        <option value="credit">Tarjeta de Crédito</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div className="form-group">
+                                <label className="form-label">
+                                    Cuenta de Entrada <span className="required">*</span>
+                                </label>
+                                <div className="select-wrapper">
+                                    <select
+                                        name="to_account"
+                                        className="form-select"
+                                        value={formData.to_account}
+                                        onChange={handleChange}
+                                        disabled={loading}
+                                    >
+                                        <option value="cash">Efectivo</option>
+                                        <option value="savings">Ahorros</option>
+                                        <option value="checking">Corriente</option>
+                                        <option value="credit">Tarjeta de Crédito</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </>
+                    )}
+
+                    {/* Categoría - Solo para Gasto e Ingreso */}
+                    {activeType !== 'transfer' && (
+                        <div className="form-group">
+                            <label className="form-label">
+                                Categoría <span className="required">*</span>
+                            </label>
+                            <div className="select-wrapper">
+                                <select
+                                    name="category_id"
+                                    className="form-select"
+                                    value={formData.category_id}
+                                    onChange={handleChange}
+                                    disabled={loading}
+                                >
+                                    <option value="">Seleccionar categoría</option>
+                                    {typeCategories.map((cat) => (
+                                        <option key={cat.id} value={cat.id}>
+                                            {cat.name}
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
+
+                            {/* Category Pills */}
+                            <div className="category-pills">
+                                {typeCategories.slice(0, 6).map((cat) => (
+                                    <div
+                                        key={cat.id}
+                                        className={`category-pill ${formData.category_id === cat.id ? 'selected' : ''
+                                            }`}
+                                        onClick={() => handleCategorySelect(cat.id)}
+                                    >
+                                        {cat.name}
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    )}
 
                     {/* Etiquetas */}
                     <div className="form-group">
