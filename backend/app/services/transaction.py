@@ -7,11 +7,8 @@ from uuid import UUID
 from app.core.exceptions import NotFoundError, ValidationError
 from app.repositories.category import CategoryRepository
 from app.repositories.transaction import TransactionRepository
-from app.schemas.transaction import (
-    CreateManualTransactionRequest,
-    TransactionFilters,
-    TransactionResponse,
-)
+from app.schemas.transaction import (CreateManualTransactionRequest,
+                                     TransactionFilters, TransactionResponse)
 
 
 class TransactionService:
@@ -46,27 +43,50 @@ class TransactionService:
             Transacción creada
 
         Raises:
-            ValidationError: Si categoría no existe
+            ValidationError: Si categoría no existe o datos inválidos
         """
-        # Validar categoría
-        category = await self.category_repo.get_by_id(data.category_id)
-        if category is None:
-            raise ValidationError(
-                code="INVALID_CATEGORY",
-                message=f"Category '{data.category_id}' not found",
-                details={"field": "category_id", "value": data.category_id},
-            )
+        # Validar según tipo de transacción
+        if data.transaction_type == "transfer":
+            # Para transferencias, validar cuentas
+            if not data.from_account or not data.to_account:
+                raise ValidationError(
+                    code="INVALID_TRANSFER",
+                    message="Transfer requires both from_account and to_account",
+                    details={"from_account": data.from_account, "to_account": data.to_account},
+                )
+            if data.from_account == data.to_account:
+                raise ValidationError(
+                    code="INVALID_TRANSFER",
+                    message="from_account and to_account cannot be the same",
+                    details={"from_account": data.from_account, "to_account": data.to_account},
+                )
+        else:
+            # Para ingresos y gastos, validar categoría
+            if not data.category_id:
+                raise ValidationError(
+                    code="INVALID_CATEGORY",
+                    message="category_id is required for income and expense transactions",
+                    details={"field": "category_id"},
+                )
+            
+            category = await self.category_repo.get_by_id(data.category_id)
+            if category is None:
+                raise ValidationError(
+                    code="INVALID_CATEGORY",
+                    message=f"Category '{data.category_id}' not found",
+                    details={"field": "category_id", "value": data.category_id},
+                )
 
-        # Validar que el tipo de categoría coincida con el tipo de transacción
-        if category.transaction_type != data.transaction_type:
-            raise ValidationError(
-                code="CATEGORY_TYPE_MISMATCH",
-                message=f"Category '{category.name}' is for {category.transaction_type}, but transaction is {data.transaction_type}",
-                details={
-                    "category_type": category.transaction_type,
-                    "transaction_type": data.transaction_type,
-                },
-            )
+            # Validar que el tipo de categoría coincida con el tipo de transacción
+            if category.transaction_type != data.transaction_type:
+                raise ValidationError(
+                    code="CATEGORY_TYPE_MISMATCH",
+                    message=f"Category '{category.name}' is for {category.transaction_type}, but transaction is {data.transaction_type}",
+                    details={
+                        "category_type": category.transaction_type,
+                        "transaction_type": data.transaction_type,
+                    },
+                )
 
         # Crear transacción
         transaction_data = {
@@ -79,6 +99,8 @@ class TransactionService:
             "classification": data.classification,
             "transaction_date": data.transaction_date,
             "entrepreneurship_id": data.entrepreneurship_id,
+            "from_account": data.from_account,
+            "to_account": data.to_account,
             "tags": data.tags or [],
             "metadata": {"source": "manual"},
             "sync_status": "synced",

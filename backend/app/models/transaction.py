@@ -2,14 +2,14 @@
 Modelo de transacciones financieras.
 """
 
-from decimal import Decimal
-from typing import Any, Dict, Optional
+from typing import Any, Optional
 
-from sqlalchemy import ARRAY, Column, DateTime, ForeignKey, Index, Numeric, String, Text
+from app.models.base import (AuditMixin, Base, SoftDeleteMixin, TimestampMixin,
+                             UUIDMixin)
+from sqlalchemy import (ARRAY, Column, DateTime, ForeignKey, Index, Numeric,
+                        String, Text)
 from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import relationship
-
-from app.models.base import AuditMixin, Base, SoftDeleteMixin, TimestampMixin, UUIDMixin
 
 
 class Transaction(Base, UUIDMixin, TimestampMixin, SoftDeleteMixin, AuditMixin):
@@ -73,7 +73,7 @@ class Transaction(Base, UUIDMixin, TimestampMixin, SoftDeleteMixin, AuditMixin):
     transaction_type = Column(
         String(20),
         nullable=False,
-        comment="Tipo: income o expense"
+        comment="Tipo: income, expense o transfer"
     )
     
     classification = Column(
@@ -94,6 +94,19 @@ class Transaction(Base, UUIDMixin, TimestampMixin, SoftDeleteMixin, AuditMixin):
         default="synced",
         nullable=False,
         comment="Estado de sincronización: pending, synced, failed"
+    )
+    
+    # Transfer Data (para transferencias entre cuentas)
+    from_account = Column(
+        String(50),
+        nullable=True,
+        comment="Cuenta de origen (para transferencias)"
+    )
+    
+    to_account = Column(
+        String(50),
+        nullable=True,
+        comment="Cuenta de destino (para transferencias)"
     )
     
     # Additional Data

@@ -7,10 +7,9 @@ from decimal import Decimal
 from typing import Any, Dict, List, Optional
 from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict, Field
-
 from app.schemas.category import CategoryResponse
 from app.schemas.common import PaginationInfo
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class TransactionBase(BaseModel):
@@ -19,7 +18,7 @@ class TransactionBase(BaseModel):
     amount: Decimal = Field(gt=0, decimal_places=2)
     currency: str = Field(default="COP", pattern="^(COP|USD|EUR)$")
     description: Optional[str] = Field(None, max_length=500)
-    transaction_type: str = Field(pattern="^(income|expense)$")
+    transaction_type: str = Field(pattern="^(income|expense|transfer)$")
     classification: str = Field(pattern="^(personal|business)$")
     transaction_date: datetime
     tags: Optional[List[str]] = None
@@ -28,8 +27,10 @@ class TransactionBase(BaseModel):
 class CreateManualTransactionRequest(TransactionBase):
     """Schema para crear transacción manual"""
 
-    category_id: str = Field(max_length=50)
+    category_id: Optional[str] = Field(None, max_length=50)
     entrepreneurship_id: Optional[UUID] = None
+    from_account: Optional[str] = Field(None, max_length=50)
+    to_account: Optional[str] = Field(None, max_length=50)
 
 
 class UpdateTransactionRequest(BaseModel):
@@ -78,7 +79,7 @@ class TransactionFilters(BaseModel):
 
     start_date: Optional[datetime] = None
     end_date: Optional[datetime] = None
-    transaction_type: Optional[str] = Field(None, pattern="^(income|expense)$")
+    transaction_type: Optional[str] = Field(None, pattern="^(income|expense|transfer)$")
     classification: Optional[str] = Field(None, pattern="^(personal|business)$")
     category_id: Optional[str] = None
     entrepreneurship_id: Optional[UUID] = None
