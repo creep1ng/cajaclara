@@ -4,12 +4,12 @@ Inicialización de base de datos con datos por defecto.
 
 from uuid import UUID
 
-from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession
-
 from app.config import settings
 from app.models.category import Category
 from app.models.user import User
+from app.utils.auth import hash_password
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 
 async def init_db(db: AsyncSession) -> None:
@@ -36,12 +36,12 @@ async def create_default_user(db: AsyncSession) -> None:
         select(User).where(User.id == UUID(settings.DEFAULT_USER_ID))
     )
     default_user = result.scalar_one_or_none()
-    
+
     if default_user is None:
         default_user = User(
             id=UUID(settings.DEFAULT_USER_ID),
             email=settings.DEFAULT_USER_EMAIL,
-            hashed_password="not-used-in-mvp",
+            hashed_password=hash_password(settings.DEFAULT_USER_PASSWORD),
             full_name="Usuario Demo",
             is_active=True
         )
@@ -49,7 +49,13 @@ async def create_default_user(db: AsyncSession) -> None:
         await db.commit()
         print(f"✓ Usuario default creado: {settings.DEFAULT_USER_EMAIL}")
     else:
-        print(f"✓ Usuario default ya existe: {settings.DEFAULT_USER_EMAIL}")
+        # Si el usuario existe pero tiene la contraseña placeholder, actualizarla
+        if default_user.hashed_password == "not-used-in-mvp":
+            default_user.hashed_password = hash_password(settings.DEFAULT_USER_PASSWORD)
+            await db.commit()
+            print(f"✓ Usuario default actualizado con nueva contraseña: {settings.DEFAULT_USER_EMAIL}")
+        else:
+            print(f"✓ Usuario default ya existe: {settings.DEFAULT_USER_EMAIL}")
 
 
 async def seed_categories(db: AsyncSession) -> None:

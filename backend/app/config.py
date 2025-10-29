@@ -22,6 +22,7 @@ class Settings(BaseSettings):
     MVP_MODE: bool = True
     DEFAULT_USER_ID: str = "00000000-0000-0000-0000-000000000001"
     DEFAULT_USER_EMAIL: str = "demo@cajaclara.com"
+    DEFAULT_USER_PASSWORD: str = "demo123"
     
     # Database
     DATABASE_URL: str = Field(
@@ -36,7 +37,7 @@ class Settings(BaseSettings):
     
     # CORS
     BACKEND_CORS_ORIGINS: str = Field(
-        default="http://localhost:3000,http://localhost:5173",
+        default="http://localhost:3000,http://localhost:5173,http://172.24.0.3:3000",
         description="Orígenes permitidos para CORS (separados por coma)"
     )
     
