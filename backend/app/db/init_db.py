@@ -15,18 +15,18 @@ from app.models.user import User
 async def init_db(db: AsyncSession) -> None:
     """
     Inicializa la base de datos con datos por defecto.
-    
+
     Args:
         db: Sesión de base de datos
     """
     print("🔧 Inicializando base de datos...")
-    
+
     # Crear usuario default si no existe
     await create_default_user(db)
-    
+
     # Seed de categorías
     await seed_categories(db)
-    
+
     print("✅ Base de datos inicializada correctamente")
 
 
@@ -36,14 +36,14 @@ async def create_default_user(db: AsyncSession) -> None:
         select(User).where(User.id == UUID(settings.DEFAULT_USER_ID))
     )
     default_user = result.scalar_one_or_none()
-    
+
     if default_user is None:
         default_user = User(
             id=UUID(settings.DEFAULT_USER_ID),
             email=settings.DEFAULT_USER_EMAIL,
             hashed_password="not-used-in-mvp",
             full_name="Usuario Demo",
-            is_active=True
+            is_active=True,
         )
         db.add(default_user)
         await db.commit()
@@ -56,11 +56,11 @@ async def seed_categories(db: AsyncSession) -> None:
     """Crea categorías predefinidas si no existen"""
     result = await db.execute(select(Category))
     existing = result.scalars().all()
-    
+
     if len(existing) > 0:
         print(f"✓ Categorías ya existen ({len(existing)} categorías)")
         return
-    
+
     categories = [
         # Gastos
         {
@@ -70,7 +70,7 @@ async def seed_categories(db: AsyncSession) -> None:
             "color": "#FF6B6B",
             "transaction_type": "expense",
             "description": "Compras de alimentos y supermercado",
-            "predefined": True
+            "predefined": True,
         },
         {
             "id": "cat-transport",
@@ -79,7 +79,7 @@ async def seed_categories(db: AsyncSession) -> None:
             "color": "#4ECDC4",
             "transaction_type": "expense",
             "description": "Transporte público, gasolina, Uber",
-            "predefined": True
+            "predefined": True,
         },
         {
             "id": "cat-utilities",
@@ -88,7 +88,7 @@ async def seed_categories(db: AsyncSession) -> None:
             "color": "#45B7D1",
             "transaction_type": "expense",
             "description": "Luz, agua, internet, teléfono",
-            "predefined": True
+            "predefined": True,
         },
         {
             "id": "cat-rent",
@@ -97,7 +97,7 @@ async def seed_categories(db: AsyncSession) -> None:
             "color": "#96CEB4",
             "transaction_type": "expense",
             "description": "Pago de arriendo o hipoteca",
-            "predefined": True
+            "predefined": True,
         },
         {
             "id": "cat-entertainment",
@@ -106,7 +106,7 @@ async def seed_categories(db: AsyncSession) -> None:
             "color": "#FFEAA7",
             "transaction_type": "expense",
             "description": "Cine, streaming, eventos",
-            "predefined": True
+            "predefined": True,
         },
         {
             "id": "cat-health",
@@ -115,7 +115,7 @@ async def seed_categories(db: AsyncSession) -> None:
             "color": "#DFE6E9",
             "transaction_type": "expense",
             "description": "Médico, medicamentos, seguros",
-            "predefined": True
+            "predefined": True,
         },
         {
             "id": "cat-education",
@@ -124,7 +124,7 @@ async def seed_categories(db: AsyncSession) -> None:
             "color": "#74B9FF",
             "transaction_type": "expense",
             "description": "Cursos, libros, materiales",
-            "predefined": True
+            "predefined": True,
         },
         {
             "id": "cat-shopping",
@@ -133,7 +133,7 @@ async def seed_categories(db: AsyncSession) -> None:
             "color": "#A29BFE",
             "transaction_type": "expense",
             "description": "Ropa, accesorios, artículos personales",
-            "predefined": True
+            "predefined": True,
         },
         {
             "id": "cat-cafe",
@@ -142,7 +142,7 @@ async def seed_categories(db: AsyncSession) -> None:
             "color": "#FD79A8",
             "transaction_type": "expense",
             "description": "Cafeterías, restaurantes, comida fuera",
-            "predefined": True
+            "predefined": True,
         },
         {
             "id": "cat-other-expense",
@@ -151,9 +151,8 @@ async def seed_categories(db: AsyncSession) -> None:
             "color": "#B2BEC3",
             "transaction_type": "expense",
             "description": "Gastos varios no categorizados",
-            "predefined": True
+            "predefined": True,
         },
-        
         # Ingresos
         {
             "id": "cat-salary",
@@ -162,7 +161,7 @@ async def seed_categories(db: AsyncSession) -> None:
             "color": "#00B894",
             "transaction_type": "income",
             "description": "Salario mensual o quincenal",
-            "predefined": True
+            "predefined": True,
         },
         {
             "id": "cat-freelance",
@@ -171,7 +170,7 @@ async def seed_categories(db: AsyncSession) -> None:
             "color": "#00CEC9",
             "transaction_type": "income",
             "description": "Trabajos independientes y proyectos",
-            "predefined": True
+            "predefined": True,
         },
         {
             "id": "cat-sales",
@@ -180,7 +179,7 @@ async def seed_categories(db: AsyncSession) -> None:
             "color": "#FDCB6E",
             "transaction_type": "income",
             "description": "Ventas de productos o servicios",
-            "predefined": True
+            "predefined": True,
         },
         {
             "id": "cat-investment",
@@ -189,7 +188,7 @@ async def seed_categories(db: AsyncSession) -> None:
             "color": "#6C5CE7",
             "transaction_type": "income",
             "description": "Rendimientos de inversiones",
-            "predefined": True
+            "predefined": True,
         },
         {
             "id": "cat-other-income",
@@ -198,13 +197,13 @@ async def seed_categories(db: AsyncSession) -> None:
             "color": "#55EFC4",
             "transaction_type": "income",
             "description": "Ingresos varios no categorizados",
-            "predefined": True
+            "predefined": True,
         },
     ]
-    
+
     for cat_data in categories:
         category = Category(**cat_data)
         db.add(category)
-    
+
     await db.commit()
     print(f"✓ {len(categories)} categorías creadas")

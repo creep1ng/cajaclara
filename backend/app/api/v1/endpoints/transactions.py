@@ -5,21 +5,25 @@ Endpoints para gestión de transacciones.
 from datetime import datetime
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, Query, status
+from fastapi import APIRouter, Depends, Form, Query, UploadFile, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import get_default_user
+from app.core.exceptions import ValidationError
 from app.db.database import get_db
 from app.models.user import User
 from app.repositories.category import CategoryRepository
 from app.repositories.transaction import TransactionRepository
 from app.schemas.transaction import (
     CreateManualTransactionRequest,
+    CreateOcrTransactionRequest,
+    OcrTransactionResponse,
     TransactionFilters,
     TransactionListResponse,
     TransactionResponse,
     UpdateTransactionRequest,
 )
+from app.services.ocr_service import OCRService
 from app.services.transaction import TransactionService
 
 router = APIRouter(prefix="/transactions", tags=["Transactions"])
@@ -63,6 +67,81 @@ async def create_manual_transaction(
     # Crear transacción
     return await transaction_service.create_manual_transaction(
         user_id=current_user.id, data=data
+    )
+
+
+@router.post(
+    "/ocr",
+    response_model=OcrTransactionResponse,
+    status_code=status.HTTP_201_CREATED,
+    summary="Registrar transacción por OCR (foto)",
+    description="Captura una foto de recibo y extrae monto, fecha y categoría sugerida automáticamente",
+)
+async def create_ocr_transaction(
+    receipt_image: UploadFile,
+    transaction_type: str = Form(..., pattern="^(income|expense)$"),
+    classification: str = Form(..., pattern="^(personal|business)$"),
+    description: str = Form(None),
+    current_user: User = Depends(get_default_user),
+    db: AsyncSession = Depends(get_db),
+) -> OcrTransactionResponse:
+    """
+    Crea una transacción desde una imagen de recibo usando OCR.
+
+    Args:
+        receipt_image: Archivo de imagen del recibo
+        transaction_type: Tipo de transacción (income/expense)
+        classification: Clasificación (personal/business)
+        description: Descripción adicional opcional
+        current_user: Usuario actual (default en MVP)
+        db: Sesión de base de datos
+
+    Returns:
+        Transacción creada con detalles de extracción OCR
+
+    Raises:
+        ValidationError: Si la imagen es inválida o el OCR falla
+    """
+    # Validar que sea una imagen
+    if not receipt_image.content_type or not receipt_image.content_type.startswith(
+        "image/"
+    ):
+        raise ValidationError(
+            code="INVALID_FILE_TYPE",
+            message="El archivo debe ser una imagen",
+            details={"content_type": receipt_image.content_type},
+        )
+
+    # Leer datos de la imagen
+    image_data = await receipt_image.read()
+
+    # Procesar con OCR
+    ocr_service = OCRService()
+    try:
+        ocr_data = await ocr_service.process_receipt(
+            image_data, receipt_image.content_type
+        )
+    except ValidationError:
+        # Re-lanzar errores de validación del OCR
+        raise
+
+    # Crear request data
+    request_data = CreateOcrTransactionRequest(
+        transaction_type=transaction_type,
+        classification=classification,
+        description=description,
+    )
+
+    # Inicializar repositorios y servicio
+    transaction_repo = TransactionRepository(db)
+    category_repo = CategoryRepository(db)
+    transaction_service = TransactionService(
+        transaction_repo=transaction_repo, category_repo=category_repo
+    )
+
+    # Crear transacción desde OCR
+    return await transaction_service.create_ocr_transaction(
+        user_id=current_user.id, ocr_data=ocr_data, request_data=request_data
     )
 
 

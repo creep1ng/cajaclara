@@ -3,28 +3,28 @@ Exportación de todos los schemas Pydantic.
 """
 
 from app.schemas.category import (
-                                  CategoryListResponse,
-                                  CategoryResponse,
-                                  CategoryRuleResponse,
-                                  CreateCategoryRuleRequest,
-                                  MatchingCriteria,
+    CategoryListResponse,
+    CategoryResponse,
+    CategoryRuleResponse,
+    CreateCategoryRuleRequest,
+    MatchingCriteria,
 )
 from app.schemas.common import (
-                                  ErrorDetail,
-                                  ErrorResponse,
-                                  PaginationInfo,
-                                  PaginationParams,
-                                  SuccessResponse,
+    ErrorDetail,
+    ErrorResponse,
+    PaginationInfo,
+    PaginationParams,
+    SuccessResponse,
 )
 from app.schemas.transaction import (
-                                  ClassificationSummary,
-                                  CreateManualTransactionRequest,
-                                  TransactionFilters,
-                                  TransactionListResponse,
-                                  TransactionMetadata,
-                                  TransactionResponse,
-                                  TransactionSummary,
-                                  UpdateTransactionRequest,
+    ClassificationSummary,
+    CreateManualTransactionRequest,
+    TransactionFilters,
+    TransactionListResponse,
+    TransactionMetadata,
+    TransactionResponse,
+    TransactionSummary,
+    UpdateTransactionRequest,
 )
 from app.schemas.user import UserResponse
 

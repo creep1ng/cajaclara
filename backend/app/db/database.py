@@ -33,7 +33,7 @@ AsyncSessionLocal = sessionmaker(
 async def get_db() -> AsyncGenerator[AsyncSession, None]:
     """
     Dependency para obtener sesión de base de datos.
-    
+
     Yields:
         AsyncSession: Sesión de base de datos
     """

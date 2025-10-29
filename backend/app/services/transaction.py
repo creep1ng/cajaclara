@@ -2,6 +2,7 @@
 Servicio de lógica de negocio para transacciones.
 """
 
+from datetime import datetime
 from uuid import UUID
 
 from app.core.exceptions import NotFoundError, ValidationError
@@ -9,6 +10,9 @@ from app.repositories.category import CategoryRepository
 from app.repositories.transaction import TransactionRepository
 from app.schemas.transaction import (
     CreateManualTransactionRequest,
+    CreateOcrTransactionRequest,
+    OcrExtractedData,
+    OcrTransactionResponse,
     TransactionFilters,
     TransactionResponse,
 )
@@ -88,13 +92,117 @@ class TransactionService:
         transaction = await self.transaction_repo.create(transaction_data)
 
         # Cargar con categoría para la respuesta
-        transaction_with_category = (
-            await self.transaction_repo.get_by_id_with_category(
-                transaction.id, user_id
-            )
+        transaction_with_category = await self.transaction_repo.get_by_id_with_category(
+            transaction.id, user_id
         )
 
         return TransactionResponse.model_validate(transaction_with_category)
+
+    async def create_ocr_transaction(
+        self,
+        user_id: UUID,
+        ocr_data: OcrExtractedData,
+        request_data: CreateOcrTransactionRequest,
+    ) -> OcrTransactionResponse:
+        """
+        Crea transacción desde datos extraídos por OCR.
+
+        Args:
+            user_id: UUID del usuario
+            ocr_data: Datos extraídos por OCR
+            request_data: Datos adicionales de la petición
+
+        Returns:
+            Transacción creada con detalles de OCR
+
+        Raises:
+            ValidationError: Si los datos son inválidos
+        """
+        # Determinar categoría a usar
+        category_id = None
+        if (
+            ocr_data.category_suggested
+            and ocr_data.category_confidence >= self._get_min_confidence()
+        ):
+            # Verificar que la categoría sugerida existe
+            category = await self.category_repo.get_by_id(ocr_data.category_suggested)
+            if category and category.transaction_type == request_data.transaction_type:
+                category_id = ocr_data.category_suggested
+
+        # Si no hay categoría válida, usar categoría por defecto
+        if not category_id:
+            # Usar categoría "otros" según el tipo de transacción
+            category_id = (
+                "cat-other-income"
+                if request_data.transaction_type == "income"
+                else "cat-other-expense"
+            )
+
+        # Validar que tengamos al menos el monto
+        if (
+            not ocr_data.amount
+            or ocr_data.amount_confidence < self._get_min_confidence()
+        ):
+            raise ValidationError(
+                code="OCR_INSUFFICIENT_DATA",
+                message="No se pudo extraer el monto con suficiente confianza. Por favor, ingrese los datos manualmente.",
+                details={
+                    "amount": str(ocr_data.amount) if ocr_data.amount else None,
+                    "confidence": ocr_data.amount_confidence,
+                    "min_required": self._get_min_confidence(),
+                },
+            )
+
+        # Usar fecha extraída o fecha actual
+        transaction_date = ocr_data.date
+        if not transaction_date or ocr_data.date_confidence < 0.5:
+            transaction_date = datetime.now()
+
+        # Construir descripción
+        description = request_data.description or ""
+        if ocr_data.vendor:
+            description = f"{ocr_data.vendor} - {description}".strip(" - ")
+
+        # Crear transacción
+        transaction_data = {
+            "user_id": user_id,
+            "amount": ocr_data.amount,
+            "currency": "COP",  # Por defecto COP
+            "category_id": category_id,
+            "description": description,
+            "transaction_type": request_data.transaction_type,
+            "classification": request_data.classification,
+            "transaction_date": transaction_date,
+            "entrepreneurship_id": request_data.entrepreneurship_id,
+            "tags": request_data.tags or [],
+            "metadata": {
+                "source": "ocr",
+                "ocr_confidence": ocr_data.amount_confidence,
+                "vendor": ocr_data.vendor,
+                "extracted_text": ocr_data.extracted_text[:500],  # Limitar tamaño
+            },
+            "sync_status": "synced",
+            "created_by": user_id,
+        }
+
+        transaction = await self.transaction_repo.create(transaction_data)
+
+        # Cargar con categoría para la respuesta
+        transaction_with_category = await self.transaction_repo.get_by_id_with_category(
+            transaction.id, user_id
+        )
+
+        # Crear respuesta con detalles de OCR
+        response = OcrTransactionResponse.model_validate(transaction_with_category)
+        response.ocr_details = ocr_data
+
+        return response
+
+    def _get_min_confidence(self) -> float:
+        """Obtiene el umbral mínimo de confianza desde config"""
+        from app.config import settings
+
+        return settings.OCR_MIN_CONFIDENCE
 
     async def get_transaction(
         self, transaction_id: UUID, user_id: UUID
@@ -205,7 +313,9 @@ class TransactionService:
                 )
 
             # Validar que el tipo de categoría coincida
-            transaction_type = data.get("transaction_type", transaction.transaction_type)
+            transaction_type = data.get(
+                "transaction_type", transaction.transaction_type
+            )
             if category.transaction_type != transaction_type:
                 raise ValidationError(
                     code="CATEGORY_TYPE_MISMATCH",
@@ -217,22 +327,16 @@ class TransactionService:
                 )
 
         # Actualizar
-        updated_transaction = await self.transaction_repo.update(
-            transaction_id, data
-        )
+        updated_transaction = await self.transaction_repo.update(transaction_id, data)
 
         # Cargar con categoría
-        transaction_with_category = (
-            await self.transaction_repo.get_by_id_with_category(
-                updated_transaction.id, user_id
-            )
+        transaction_with_category = await self.transaction_repo.get_by_id_with_category(
+            updated_transaction.id, user_id
         )
 
         return TransactionResponse.model_validate(transaction_with_category)
 
-    async def delete_transaction(
-        self, transaction_id: UUID, user_id: UUID
-    ) -> None:
+    async def delete_transaction(self, transaction_id: UUID, user_id: UUID) -> None:
         """
         Elimina una transacción (soft delete).
 

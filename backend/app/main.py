@@ -31,14 +31,14 @@ async def lifespan(app: FastAPI):
     print(f"🚀 Starting {settings.APP_NAME} v{settings.APP_VERSION}")
     print(f"📍 Environment: {settings.ENVIRONMENT}")
     print(f"🔧 MVP Mode: {settings.MVP_MODE}")
-    
+
     # Initialize database
     async for db in get_db():
         await init_db(db)
         break
-    
+
     yield
-    
+
     # Shutdown
     print(f"👋 Shutting down {settings.APP_NAME}")
 
@@ -87,15 +87,15 @@ def get_status_code_for_exception(exc: CajaClaraException) -> int:
 async def cajaclara_exception_handler(request: Request, exc: CajaClaraException):
     """Handle custom exceptions"""
     status_code = get_status_code_for_exception(exc)
-    
+
     return JSONResponse(
         status_code=status_code,
         content={
             "code": exc.code,
             "message": exc.message,
             "details": exc.details,
-            "timestamp": datetime.utcnow().isoformat()
-        }
+            "timestamp": datetime.utcnow().isoformat(),
+        },
     )
 
 
@@ -103,15 +103,15 @@ async def cajaclara_exception_handler(request: Request, exc: CajaClaraException)
 async def general_exception_handler(request: Request, exc: Exception):
     """Handle unexpected exceptions"""
     print(f"❌ Unexpected error: {str(exc)}")
-    
+
     return JSONResponse(
         status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
         content={
             "code": "INTERNAL_SERVER_ERROR",
             "message": "An unexpected error occurred",
             "details": {"error": str(exc)} if settings.DEBUG else {},
-            "timestamp": datetime.utcnow().isoformat()
-        }
+            "timestamp": datetime.utcnow().isoformat(),
+        },
     )
 
 
@@ -127,7 +127,7 @@ async def health_check():
         "status": "healthy",
         "version": settings.APP_VERSION,
         "environment": settings.ENVIRONMENT,
-        "mode": "MVP" if settings.MVP_MODE else "Production"
+        "mode": "MVP" if settings.MVP_MODE else "Production",
     }
 
 
@@ -138,5 +138,5 @@ async def root():
         "message": f"Welcome to {settings.APP_NAME}",
         "version": settings.APP_VERSION,
         "docs": "/docs",
-        "health": "/health"
+        "health": "/health",
     }

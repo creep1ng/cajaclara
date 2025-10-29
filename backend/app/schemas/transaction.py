@@ -111,3 +111,33 @@ class TransactionListResponse(BaseModel):
     transactions: List[TransactionResponse]
     pagination: PaginationInfo
     summary: TransactionSummary
+
+
+class CreateOcrTransactionRequest(BaseModel):
+    """Schema para crear transacción desde OCR"""
+
+    transaction_type: str = Field(pattern="^(income|expense)$")
+    classification: str = Field(pattern="^(personal|business)$")
+    description: Optional[str] = Field(None, max_length=500)
+    tags: Optional[List[str]] = None
+    entrepreneurship_id: Optional[UUID] = None
+
+
+class OcrExtractedData(BaseModel):
+    """Datos extraídos del OCR"""
+
+    amount: Optional[Decimal] = Field(None, gt=0, decimal_places=2)
+    amount_confidence: float = Field(ge=0.0, le=1.0)
+    date: Optional[datetime] = None
+    date_confidence: float = Field(ge=0.0, le=1.0)
+    vendor: Optional[str] = Field(None, max_length=200)
+    vendor_confidence: float = Field(ge=0.0, le=1.0)
+    category_suggested: Optional[str] = Field(None, max_length=50)
+    category_confidence: float = Field(ge=0.0, le=1.0)
+    extracted_text: str = Field(max_length=5000)
+
+
+class OcrTransactionResponse(TransactionResponse):
+    """Schema de respuesta para transacción OCR con detalles adicionales"""
+
+    ocr_details: Optional[OcrExtractedData] = None
