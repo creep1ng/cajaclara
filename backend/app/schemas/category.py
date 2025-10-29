@@ -9,8 +9,28 @@ from typing import List, Optional
 from pydantic import BaseModel, Field
 
 
+class Category(BaseModel):
+    """Schema de categoría según OpenAPI"""
+    
+    id: str = Field(description="ID único de categoría")
+    name: str = Field(description="Nombre de categoría")
+    icon: Optional[str] = Field(None, description="Código/nombre de icono")
+    color: Optional[str] = Field(None, pattern="^#[0-9A-Fa-f]{6}$", description="Color hexadecimal para UI")
+    transaction_type: str = Field(pattern="^(income|expense)$", description="Tipo de transacción")
+    description: Optional[str] = Field(None, description="Descripción de la categoría")
+    predefined: bool = Field(True, description="Si es categoría del sistema o personalizada")
+    
+    model_config = {"from_attributes": True}
+
+
+class CategoryList(BaseModel):
+    """Schema de respuesta para lista de categorías según OpenAPI"""
+    
+    categories: List[Category]
+
+
 class CategoryBase(BaseModel):
-    """Base schema para categoría"""
+    """Base schema para categoría (uso interno)"""
     
     id: str = Field(max_length=50, description="ID de categoría")
     name: str = Field(max_length=100, description="Nombre")
@@ -22,18 +42,12 @@ class CategoryBase(BaseModel):
 
 
 class CategoryResponse(CategoryBase):
-    """Schema de respuesta de categoría"""
+    """Schema de respuesta de categoría (uso interno)"""
     
     created_at: datetime
     updated_at: datetime
     
     model_config = {"from_attributes": True}
-
-
-class CategoryListResponse(BaseModel):
-    """Lista de categorías"""
-    
-    categories: List[CategoryResponse]
 
 
 class MatchingCriteria(BaseModel):

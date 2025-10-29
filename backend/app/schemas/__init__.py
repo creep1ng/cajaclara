@@ -2,30 +2,18 @@
 Exportación de todos los schemas Pydantic.
 """
 
-from app.schemas.category import (
-                                  CategoryListResponse,
-                                  CategoryResponse,
+from app.schemas.category import (Category, CategoryList, CategoryResponse,
                                   CategoryRuleResponse,
-                                  CreateCategoryRuleRequest,
-                                  MatchingCriteria,
-)
-from app.schemas.common import (
-                                  ErrorDetail,
-                                  ErrorResponse,
-                                  PaginationInfo,
-                                  PaginationParams,
-                                  SuccessResponse,
-)
-from app.schemas.transaction import (
-                                  ClassificationSummary,
-                                  CreateManualTransactionRequest,
-                                  TransactionFilters,
-                                  TransactionListResponse,
-                                  TransactionMetadata,
-                                  TransactionResponse,
-                                  TransactionSummary,
-                                  UpdateTransactionRequest,
-)
+                                  CreateCategoryRuleRequest, MatchingCriteria)
+from app.schemas.common import (ErrorDetail, ErrorResponse, PaginationInfo,
+                                PaginationParams, SuccessResponse)
+from app.schemas.transaction import (ClassificationSummary,
+                                     CreateManualTransactionRequest,
+                                     TransactionFilters,
+                                     TransactionListResponse,
+                                     TransactionMetadata, TransactionResponse,
+                                     TransactionSummary,
+                                     UpdateTransactionRequest)
 from app.schemas.user import UserResponse
 
 __all__ = [
@@ -36,11 +24,12 @@ __all__ = [
     "ErrorResponse",
     "SuccessResponse",
     # Category
+    "Category",
+    "CategoryList",
     "CategoryResponse",
-    "CategoryListResponse",
+    "CategoryRuleResponse",
     "MatchingCriteria",
     "CreateCategoryRuleRequest",
-    "CategoryRuleResponse",
     # Transaction
     "CreateManualTransactionRequest",
     "UpdateTransactionRequest",
