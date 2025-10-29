@@ -1,0 +1,3627 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CajaClara - Gestión de Finanzas Personales MVP</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #0FA678;
+            --secondary: #F2F6F5;
+            --accent: #FFB300;
+            --error: #E86E6E;
+            --text-primary: #0B2B28;
+            --text-secondary: #5A726E;
+            --border: #E0EAE8;
+            --shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            --radius: 12px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            color: var(--text-primary);
+            background-color: var(--secondary);
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        /* Login Page Styles */
+        .login-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .login-card {
+            background: white;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            width: 100%;
+            max-width: 420px;
+            padding: 40px;
+        }
+
+        .logo-container {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .logo {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .logo-icon {
+            width: 40px;
+            height: 40px;
+            background-color: var(--primary);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 20px;
+        }
+
+        .logo-text {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .tagline {
+            color: var(--text-secondary);
+            font-size: 14px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            font-size: 14px;
+        }
+
+        .required {
+            color: var(--error);
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 12px 16px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        .password-input-container {
+            position: relative;
+        }
+
+        .toggle-password {
+            position: absolute;
+            right: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            cursor: pointer;
+        }
+
+        .checkbox-container {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .checkbox-container input {
+            margin-right: 8px;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 16px;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background-color: var(--primary);
+            color: white;
+            width: 100%;
+            justify-content: center;
+        }
+
+        .btn-primary:hover {
+            background-color: #0d8d63;
+        }
+
+        .btn-secondary {
+            background-color: transparent;
+            color: var(--primary);
+            border: 1px solid var(--primary);
+            width: 100%;
+            margin-top: 12px;
+            justify-content: center;
+        }
+
+        .btn-secondary:hover {
+            background-color: rgba(15, 166, 120, 0.1);
+        }
+
+        .btn-back {
+            background-color: transparent;
+            color: var(--text-secondary);
+            border: 1px solid var(--border);
+            padding: 8px 16px;
+            font-size: 14px;
+        }
+
+        .btn-back:hover {
+            background-color: var(--secondary);
+            color: var(--text-primary);
+        }
+
+        .form-footer {
+            text-align: center;
+            margin-top: 24px;
+            font-size: 14px;
+        }
+
+        .form-footer a {
+            color: var(--primary);
+            text-decoration: none;
+        }
+
+        .form-footer a:hover {
+            text-decoration: underline;
+        }
+
+        .divider {
+            text-align: center;
+            margin: 24px 0;
+            position: relative;
+        }
+
+        .divider::before {
+            content: "";
+            position: absolute;
+            top: 50%;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background-color: var(--border);
+        }
+
+        .divider span {
+            background-color: white;
+            padding: 0 12px;
+            position: relative;
+            color: var(--text-secondary);
+        }
+
+        /* Dashboard Styles */
+        .dashboard-container {
+            display: none;
+            min-height: 100vh;
+            background-color: var(--secondary);
+        }
+
+        .header {
+            background-color: white;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+            padding: 16px 0;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .nav-tabs {
+            display: flex;
+            gap: 24px;
+        }
+
+        .nav-tab {
+            font-weight: 500;
+            color: var(--text-secondary);
+            cursor: pointer;
+            padding-bottom: 4px;
+            border-bottom: 2px solid transparent;
+            transition: all 0.3s;
+        }
+
+        .nav-tab.active {
+            color: var(--primary);
+            border-bottom-color: var(--primary);
+        }
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        /* Register Dropdown Menu */
+        .register-dropdown {
+            position: relative;
+        }
+
+        .btn-register {
+            background-color: var(--primary);
+            color: white;
+            padding: 12px 20px;
+            position: relative;
+        }
+
+        .btn-register:hover {
+            background-color: #0d8d63;
+        }
+
+        .dropdown-menu {
+            position: absolute;
+            top: 100%;
+            right: 0;
+            background-color: white;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            min-width: 220px;
+            margin-top: 8px;
+            display: none;
+            z-index: 1000;
+            overflow: hidden;
+        }
+
+        .dropdown-menu.show {
+            display: block;
+            animation: slideDown 0.3s ease-out;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .dropdown-item {
+            padding: 12px 16px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            border: none;
+            background: none;
+            width: 100%;
+            text-align: left;
+            font-size: 15px;
+            color: var(--text-primary);
+        }
+
+        .dropdown-item:hover {
+            background-color: var(--secondary);
+        }
+
+        .dropdown-item i {
+            width: 20px;
+            text-align: center;
+        }
+
+        .dropdown-divider {
+            height: 1px;
+            background-color: var(--border);
+            margin: 4px 0;
+        }
+
+        .user-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background-color: var(--accent);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+        }
+
+        /* Workflow Info Section */
+        .workflow-info {
+            background-color: white;
+            border-radius: var(--radius);
+            padding: 24px;
+            margin: 24px 0;
+            box-shadow: var(--shadow);
+        }
+
+        .workflow-title {
+            font-size: 20px;
+            font-weight: 700;
+            margin-bottom: 16px;
+            color: var(--text-primary);
+        }
+
+        .workflow-steps {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+        }
+
+        .workflow-step {
+            display: flex;
+            gap: 12px;
+            padding: 16px;
+            background-color: var(--secondary);
+            border-radius: 8px;
+            transition: transform 0.3s;
+        }
+
+        .workflow-step:hover {
+            transform: translateY(-2px);
+        }
+
+        .step-number {
+            width: 32px;
+            height: 32px;
+            background-color: var(--primary);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            flex-shrink: 0;
+        }
+
+        .step-content {
+            flex: 1;
+        }
+
+        .step-title {
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .step-description {
+            font-size: 14px;
+            color: var(--text-secondary);
+        }
+
+        /* API Status */
+        .api-status {
+            background-color: white;
+            border-radius: var(--radius);
+            padding: 16px;
+            margin-bottom: 24px;
+            box-shadow: var(--shadow);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .status-indicator {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background-color: var(--primary);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% {
+                box-shadow: 0 0 0 0 rgba(15, 166, 120, 0.7);
+            }
+            70% {
+                box-shadow: 0 0 0 10px rgba(15, 166, 120, 0);
+            }
+            100% {
+                box-shadow: 0 0 0 0 rgba(15, 166, 120, 0);
+            }
+        }
+
+        .status-text {
+            font-size: 14px;
+            color: var(--text-secondary);
+        }
+
+        /* Main Content */
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 320px;
+            gap: 24px;
+            padding: 24px 0;
+        }
+
+        .dashboard-left {
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+
+        .cash-card {
+            background-color: white;
+            border-radius: var(--radius);
+            padding: 24px;
+            box-shadow: var(--shadow);
+        }
+
+        .cash-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+
+        .cash-title {
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .cash-amount {
+            font-size: 32px;
+            font-weight: 700;
+            color: var(--primary);
+            margin-bottom: 16px;
+        }
+
+        .btn-add-account {
+            background-color: transparent;
+            color: var(--primary);
+            border: 1px solid var(--primary);
+        }
+
+        .btn-add-account:hover {
+            background-color: rgba(15, 166, 120, 0.1);
+        }
+
+        .gauges-card {
+            background-color: white;
+            border-radius: var(--radius);
+            padding: 24px;
+            box-shadow: var(--shadow);
+        }
+
+        .gauges-container {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 24px;
+        }
+
+        .gauge {
+            text-align: center;
+            width: 30%;
+        }
+
+        .gauge-circle {
+            position: relative;
+            width: 120px;
+            height: 60px;
+            margin: 0 auto 16px;
+            overflow: hidden;
+        }
+
+        .gauge-circle-bg {
+            position: absolute;
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            background: conic-gradient(
+                from 180deg,
+                var(--border) 0deg,
+                var(--border) 180deg,
+                transparent 180deg
+            );
+        }
+
+        .gauge-circle-fill {
+            position: absolute;
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            background: conic-gradient(
+                from 180deg,
+                var(--primary) 0deg,
+                var(--primary) 0deg,
+                transparent 0deg
+            );
+            transition: all 1s ease;
+        }
+
+        .gauge-circle-mask {
+            position: absolute;
+            width: 100px;
+            height: 100px;
+            background-color: white;
+            border-radius: 50%;
+            top: 10px;
+            left: 10px;
+        }
+
+        .gauge-value {
+            position: absolute;
+            top: 30px;
+            left: 0;
+            right: 0;
+            text-align: center;
+            font-weight: 700;
+            font-size: 18px;
+        }
+
+        .gauge-label {
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .gauge-sublabel {
+            color: var(--text-secondary);
+            font-size: 14px;
+        }
+
+        .dashboard-right {
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+
+        .date-selector-card {
+            background-color: white;
+            border-radius: var(--radius);
+            padding: 24px;
+            box-shadow: var(--shadow);
+        }
+
+        .date-selector-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+
+        .date-selector-title {
+            font-weight: 600;
+        }
+
+        .date-display {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 600;
+            color: var(--primary);
+        }
+
+        .time-range-options {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+
+        .time-range-option {
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .time-range-option.active {
+            background-color: var(--primary);
+            color: white;
+        }
+
+        .time-range-option:not(.active) {
+            background-color: var(--secondary);
+        }
+
+        .months-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+        }
+
+        .month-item {
+            padding: 8px;
+            text-align: center;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 14px;
+        }
+
+        .month-item:hover {
+            background-color: var(--secondary);
+        }
+
+        .month-item.current {
+            background-color: var(--primary);
+            color: white;
+        }
+
+        .accounts-card {
+            background-color: white;
+            border-radius: var(--radius);
+            padding: 24px;
+            box-shadow: var(--shadow);
+        }
+
+        .accounts-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+
+        .accounts-title {
+            font-weight: 600;
+        }
+
+        .account-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .account-item:last-child {
+            border-bottom: none;
+        }
+
+        .account-name {
+            font-weight: 500;
+        }
+
+        .account-amount {
+            font-weight: 600;
+        }
+
+        /* View Records Page */
+        .view-records-container {
+            display: none;
+            min-height: 100vh;
+            background-color: var(--secondary);
+        }
+
+        .records-header {
+            background-color: white;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+            padding: 16px 0;
+            margin-bottom: 24px;
+        }
+
+        .records-header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .records-title {
+            font-size: 24px;
+            font-weight: 700;
+        }
+
+        .records-actions {
+            display: flex;
+            gap: 12px;
+        }
+
+        .btn-export {
+            background-color: transparent;
+            color: var(--primary);
+            border: 1px solid var(--primary);
+        }
+
+        .btn-export:hover {
+            background-color: rgba(15, 166, 120, 0.1);
+        }
+
+        .records-filters {
+            background-color: white;
+            border-radius: var(--radius);
+            padding: 20px;
+            margin-bottom: 24px;
+            box-shadow: var(--shadow);
+        }
+
+        .filters-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-bottom: 16px;
+        }
+
+        .search-box {
+            position: relative;
+            grid-column: span 2;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 12px 16px 12px 48px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-size: 16px;
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-secondary);
+        }
+
+        .records-list {
+            background-color: white;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            overflow: hidden;
+        }
+
+        .record-item {
+            padding: 20px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: background-color 0.3s;
+            cursor: pointer;
+        }
+
+        .record-item:hover {
+            background-color: var(--secondary);
+        }
+
+        .record-item:last-child {
+            border-bottom: none;
+        }
+
+        .record-info {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .record-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+        }
+
+        .record-icon.income {
+            background-color: rgba(15, 166, 120, 0.1);
+            color: var(--primary);
+        }
+
+        .record-icon.expense {
+            background-color: rgba(232, 110, 110, 0.1);
+            color: var(--error);
+        }
+
+        .record-icon.transfer {
+            background-color: rgba(255, 179, 0, 0.1);
+            color: var(--accent);
+        }
+
+        .record-details {
+            flex: 1;
+        }
+
+        .record-category {
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .record-date {
+            color: var(--text-secondary);
+            font-size: 14px;
+        }
+
+        .record-amount {
+            font-size: 20px;
+            font-weight: 700;
+        }
+
+        .record-amount.income {
+            color: var(--primary);
+        }
+
+        .record-amount.expense {
+            color: var(--error);
+        }
+
+        .record-amount.transfer {
+            color: var(--accent);
+        }
+
+        .record-actions-menu {
+            display: flex;
+            gap: 8px;
+        }
+
+        .action-btn {
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            cursor: pointer;
+            padding: 8px;
+            border-radius: 50%;
+            transition: all 0.3s;
+        }
+
+        .action-btn:hover {
+            background-color: var(--secondary);
+            color: var(--text-primary);
+        }
+
+        /* Accounts Page */
+        .accounts-container {
+            display: none;
+            min-height: 100vh;
+            background-color: var(--secondary);
+        }
+
+        .accounts-header {
+            background-color: white;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+            padding: 16px 0;
+            margin-bottom: 24px;
+        }
+
+        .accounts-header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .accounts-title {
+            font-size: 24px;
+            font-weight: 700;
+        }
+
+        .accounts-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 24px;
+        }
+
+        .account-card {
+            background-color: white;
+            border-radius: var(--radius);
+            padding: 24px;
+            box-shadow: var(--shadow);
+            transition: transform 0.3s;
+        }
+
+        .account-card:hover {
+            transform: translateY(-2px);
+        }
+
+        .account-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+
+        .account-card-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            margin-bottom: 12px;
+        }
+
+        .account-card-icon.savings {
+            background-color: rgba(15, 166, 120, 0.1);
+            color: var(--primary);
+        }
+
+        .account-card-icon.checking {
+            background-color: rgba(255, 179, 0, 0.1);
+            color: var(--accent);
+        }
+
+        .account-card-icon.credit {
+            background-color: rgba(232, 110, 110, 0.1);
+            color: var(--error);
+        }
+
+        .account-card-icon.investment {
+            background-color: rgba(91, 114, 176, 0.1);
+            color: #5B72B0;
+        }
+
+        .account-card-name {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .account-card-type {
+            color: var(--text-secondary);
+            font-size: 14px;
+            margin-bottom: 16px;
+        }
+
+        .account-card-balance {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 16px;
+        }
+
+        .account-card-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .btn-account-action {
+            flex: 1;
+            padding: 8px;
+            background-color: var(--secondary);
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 14px;
+        }
+
+        .btn-account-action:hover {
+            background-color: var(--border);
+        }
+
+        /* Reports Page */
+        .reports-container {
+            display: none;
+            min-height: 100vh;
+            background-color: var(--secondary);
+        }
+
+        .reports-header {
+            background-color: white;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+            padding: 16px 0;
+            margin-bottom: 24px;
+        }
+
+        .reports-header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .reports-title {
+            font-size: 24px;
+            font-weight: 700;
+        }
+
+        .reports-period-selector {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .reports-content {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 24px;
+        }
+
+        .report-card {
+            background-color: white;
+            border-radius: var(--radius);
+            padding: 24px;
+            box-shadow: var(--shadow);
+        }
+
+        .report-card-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .report-card-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+        }
+
+        .report-card-icon.income {
+            background-color: rgba(15, 166, 120, 0.1);
+            color: var(--primary);
+        }
+
+        .report-card-icon.expense {
+            background-color: rgba(232, 110, 110, 0.1);
+            color: var(--error);
+        }
+
+        .report-card-icon.balance {
+            background-color: rgba(91, 114, 176, 0.1);
+            color: #5B72B0;
+        }
+
+        .report-metric {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .report-metric:last-child {
+            border-bottom: none;
+        }
+
+        .report-metric-label {
+            color: var(--text-secondary);
+            font-size: 14px;
+        }
+
+        .report-metric-value {
+            font-weight: 600;
+            font-size: 16px;
+        }
+
+        .chart-container {
+            height: 200px;
+            display: flex;
+            align-items: flex-end;
+            gap: 8px;
+            margin-top: 20px;
+        }
+
+        .chart-bar {
+            flex: 1;
+            background-color: var(--primary);
+            border-radius: 4px 4px 0 0;
+            transition: all 0.3s;
+            position: relative;
+        }
+
+        .chart-bar:hover {
+            opacity: 0.8;
+        }
+
+        .chart-bar.expense {
+            background-color: var(--error);
+        }
+
+        .chart-bar-label {
+            position: absolute;
+            bottom: -20px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+
+        /* Visual Record Overlay */
+        .visual-record-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .visual-record-content {
+            background-color: white;
+            border-radius: var(--radius);
+            width: 100%;
+            max-width: 800px;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+        }
+
+        .visual-record-header {
+            padding: 24px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .visual-record-title {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .visual-record-close {
+            background: none;
+            border: none;
+            font-size: 28px;
+            cursor: pointer;
+            color: var(--text-secondary);
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+        }
+
+        .visual-record-close:hover {
+            background-color: var(--secondary);
+        }
+
+        .visual-record-body {
+            padding: 24px;
+        }
+
+        .visual-record-tabs {
+            display: flex;
+            gap: 16px;
+            margin-bottom: 24px;
+            border-bottom: 2px solid var(--border);
+        }
+
+        .visual-tab {
+            padding: 12px 24px;
+            background: none;
+            border: none;
+            font-weight: 600;
+            cursor: pointer;
+            color: var(--text-secondary);
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s;
+        }
+
+        .visual-tab.active {
+            color: var(--primary);
+            border-bottom-color: var(--primary);
+        }
+
+        .visual-form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+        }
+
+        .visual-upload-area {
+            grid-column: span 2;
+            border: 2px dashed var(--border);
+            border-radius: var(--radius);
+            padding: 40px;
+            text-align: center;
+            background-color: var(--secondary);
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+
+        .visual-upload-area:hover {
+            border-color: var(--primary);
+            background-color: rgba(15, 166, 120, 0.05);
+        }
+
+        .upload-icon {
+            font-size: 48px;
+            color: var(--primary);
+            margin-bottom: 16px;
+        }
+
+        .upload-text {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .upload-subtext {
+            color: var(--text-secondary);
+            font-size: 14px;
+        }
+
+        .visual-preview {
+            grid-column: span 2;
+            display: none;
+            background-color: var(--secondary);
+            border-radius: var(--radius);
+            padding: 16px;
+            position: relative;
+        }
+
+        .preview-image {
+            width: 100%;
+            max-height: 300px;
+            object-fit: contain;
+            border-radius: 8px;
+        }
+
+        .preview-remove {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            background-color: var(--error);
+            color: white;
+            border: none;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Manual Record Modal */
+        .manual-record-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .manual-record-content {
+            background-color: white;
+            border-radius: var(--radius);
+            width: 100%;
+            max-width: 900px;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: var(--shadow);
+        }
+
+        .manual-record-header {
+            padding: 24px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .manual-record-title {
+            font-size: 20px;
+            font-weight: 600;
+        }
+
+        .record-tabs {
+            display: flex;
+            gap: 24px;
+            margin-top: 16px;
+        }
+
+        .record-tab {
+            padding: 8px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 500;
+        }
+
+        .record-tab.active {
+            background-color: var(--primary);
+            color: white;
+        }
+
+        .record-tab:not(.active) {
+            background-color: var(--secondary);
+        }
+
+        .manual-record-body {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+            padding: 24px;
+        }
+
+        .record-left-section {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .record-right-section {
+            background-color: var(--secondary);
+            border-radius: var(--radius);
+            padding: 24px;
+        }
+
+        .other-details-title {
+            font-weight: 600;
+            margin-bottom: 20px;
+            color: var(--text-primary);
+        }
+
+        .amount-input-group {
+            position: relative;
+        }
+
+        .amount-input {
+            font-size: 32px;
+            font-weight: 600;
+            padding: 12px 16px 12px 50px;
+            border: 2px solid var(--border);
+            border-radius: 8px;
+            width: 100%;
+        }
+
+        .amount-currency {
+            position: absolute;
+            left: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 24px;
+            font-weight: 600;
+            color: var(--text-secondary);
+        }
+
+        .select-wrapper {
+            position: relative;
+        }
+
+        .select-wrapper::after {
+            content: '\f078';
+            font-family: 'Font Awesome 6 Free';
+            font-weight: 900;
+            position: absolute;
+            right: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            pointer-events: none;
+            color: var(--text-secondary);
+        }
+
+        .form-select {
+            width: 100%;
+            padding: 12px 16px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-size: 16px;
+            background-color: white;
+            appearance: none;
+            cursor: pointer;
+        }
+
+        .form-select:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        .datetime-input {
+            width: 100%;
+            padding: 12px 16px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-size: 16px;
+        }
+
+        .manual-record-footer {
+            padding: 24px;
+            border-top: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .footer-actions {
+            display: flex;
+            gap: 12px;
+        }
+
+        .btn-cancel-record {
+            background-color: transparent;
+            color: var(--text-secondary);
+            border: 1px solid var(--border);
+        }
+
+        .btn-cancel-record:hover {
+            background-color: var(--secondary);
+        }
+
+        .btn-add-record-confirm {
+            background-color: var(--primary);
+            color: white;
+        }
+
+        .btn-add-record-confirm:hover {
+            background-color: #0d8d63;
+        }
+
+        .btn-add-another {
+            background-color: var(--accent);
+            color: white;
+        }
+
+        .btn-add-another:hover {
+            background-color: #e6a200;
+        }
+
+        /* Mobile Responsive */
+        @media (max-width: 768px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+
+            .gauges-container {
+                flex-direction: column;
+                gap: 24px;
+            }
+
+            .gauge {
+                width: 100%;
+            }
+
+            .header-content {
+                flex-direction: column;
+                gap: 16px;
+                align-items: flex-start;
+            }
+
+            .container {
+                padding: 0 16px;
+            }
+
+            .manual-record-body {
+                grid-template-columns: 1fr;
+            }
+
+            .record-right-section {
+                order: -1;
+            }
+
+            .visual-form-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .visual-upload-area,
+            .visual-preview {
+                grid-column: span 1;
+            }
+
+            .filters-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .search-box {
+                grid-column: span 1;
+            }
+
+            .records-header-content {
+                flex-direction: column;
+                gap: 16px;
+                align-items: flex-start;
+            }
+
+            .record-item {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 12px;
+            }
+
+            .record-actions-menu {
+                width: 100%;
+                justify-content: flex-end;
+            }
+
+            .workflow-steps {
+                grid-template-columns: 1fr;
+            }
+
+            .accounts-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .reports-content {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Loading state */
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background-color: white;
+            border-radius: var(--radius);
+            padding: 24px;
+            width: 90%;
+            max-width: 500px;
+            box-shadow: var(--shadow);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .modal-title {
+            font-weight: 600;
+            font-size: 18px;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: var(--text-secondary);
+        }
+
+        .modal-body {
+            margin-bottom: 20px;
+        }
+
+        .modal-footer {
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+        }
+
+        .btn-cancel {
+            background-color: transparent;
+            color: var(--text-secondary);
+            border: 1px solid var(--border);
+        }
+
+        .btn-cancel:hover {
+            background-color: var(--secondary);
+        }
+
+        .btn-confirm {
+            background-color: var(--primary);
+            color: white;
+        }
+
+        .btn-confirm:hover {
+            background-color: #0d8d63;
+        }
+
+        /* Notification */
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background-color: white;
+            border-radius: var(--radius);
+            padding: 16px;
+            box-shadow: var(--shadow);
+            display: none;
+            align-items: center;
+            gap: 12px;
+            z-index: 1001;
+            max-width: 300px;
+        }
+
+        .notification.show {
+            display: flex;
+            animation: slideIn 0.3s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        .notification-icon {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .notification.success .notification-icon {
+            background-color: var(--primary);
+            color: white;
+        }
+
+        .notification.error .notification-icon {
+            background-color: var(--error);
+            color: white;
+        }
+
+        .notification.info .notification-icon {
+            background-color: var(--accent);
+            color: white;
+        }
+
+        .notification-message {
+            flex: 1;
+        }
+
+        .notification-close {
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            cursor: pointer;
+        }
+
+        /* Category Pills */
+        .category-pills {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 8px;
+        }
+
+        .category-pill {
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s;
+            border: 1px solid var(--border);
+            background-color: white;
+        }
+
+        .category-pill:hover {
+            background-color: var(--secondary);
+        }
+
+        .category-pill.selected {
+            background-color: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+
+        /* Labels Input */
+        .labels-input-container {
+            position: relative;
+        }
+
+        .labels-display {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 8px;
+            min-height: 32px;
+            padding: 8px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            background-color: white;
+            cursor: text;
+        }
+
+        .label-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 4px 8px;
+            background-color: var(--secondary);
+            border-radius: 16px;
+            font-size: 14px;
+        }
+
+        .label-remove {
+            cursor: pointer;
+            color: var(--text-secondary);
+        }
+
+        .label-input {
+            border: none;
+            outline: none;
+            flex: 1;
+            min-width: 100px;
+            font-size: 14px;
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+        }
+
+        .empty-icon {
+            font-size: 64px;
+            color: var(--text-secondary);
+            margin-bottom: 16px;
+        }
+
+        .empty-title {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .empty-text {
+            color: var(--text-secondary);
+            margin-bottom: 24px;
+        }
+
+        /* MVP Badge */
+        .mvp-badge {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background-color: var(--accent);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            z-index: 1000;
+            animation: fadeIn 0.5s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- MVP Badge -->
+    <div class="mvp-badge">
+        <i class="fas fa-rocket"></i> MVP CajaClara
+    </div>
+
+    <!-- Login Page -->
+    <div class="login-container" id="loginPage">
+        <div class="login-card">
+            <div class="logo-container">
+                <div class="logo">
+                    <div class="logo-icon">C</div>
+                    <div class="logo-text">CajaClara</div>
+                </div>
+                <p class="tagline">Administra tu dinero con claridad</p>
+            </div>
+
+            <form id="loginForm">
+                <div class="form-group">
+                    <label class="form-label" for="email">Email/Usuario</label>
+                    <input type="text" id="email" class="form-input" placeholder="Ingresa tu email o usuario" required>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="password">Contraseña</label>
+                    <div class="password-input-container">
+                        <input type="password" id="password" class="form-input" placeholder="Ingresa tu contraseña" required>
+                        <button type="button" class="toggle-password" id="togglePassword">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="checkbox-container">
+                    <input type="checkbox" id="remember">
+                    <label for="remember">Recordarme</label>
+                </div>
+
+                <button type="submit" class="btn btn-primary" id="loginBtn">
+                    Iniciar sesión
+                </button>
+            </form>
+
+            <div class="divider">
+                <span>O</span>
+            </div>
+
+            <button class="btn btn-secondary" id="guestBtn">
+                Entrar como invitado
+            </button>
+
+            <div class="form-footer">
+                <p>¿No tienes una cuenta? <a href="#">Regístrate</a></p>
+                <p><a href="#">¿Olvidaste tu contraseña?</a></p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Dashboard Page -->
+    <div class="dashboard-container" id="dashboardPage">
+        <header class="header">
+            <div class="container">
+                <div class="header-content">
+                    <div class="nav-tabs">
+                        <div class="nav-tab active" data-page="dashboard">Dashboard</div>
+                        <div class="nav-tab" data-page="records">Ver registros</div>
+                        <div class="nav-tab" data-page="accounts">Accounts</div>
+                        <div class="nav-tab" data-page="reports">Reports</div>
+                    </div>
+
+                    <div class="header-actions">
+                        <div class="register-dropdown">
+                            <button class="btn btn-register" id="registerBtn">
+                                <i class="fas fa-plus"></i>
+                                Registrar
+                                <i class="fas fa-chevron-down"></i>
+                            </button>
+                            <div class="dropdown-menu" id="dropdownMenu">
+                                <button class="dropdown-item" id="manualRecordBtn">
+                                    <i class="fas fa-keyboard"></i>
+                                    Registro manual
+                                </button>
+                                <button class="dropdown-item" id="visualRecordBtn">
+                                    <i class="fas fa-camera"></i>
+                                    Registro visual
+                                </button>
+                                <div class="dropdown-divider"></div>
+                                <button class="dropdown-item" id="viewRecordsBtn">
+                                    <i class="fas fa-list"></i>
+                                    Ver registros
+                                </button>
+                            </div>
+                        </div>
+                        <div class="user-avatar">JA</div>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <div class="container">
+            <!-- API Status Indicator -->
+            <div class="api-status">
+                <div class="status-indicator"></div>
+                <span class="status-text">API conectada y sincronizada</span>
+            </div>
+
+            <!-- Workflow Information -->
+            <div class="workflow-info">
+                <h2 class="workflow-title">Flujo de Trabajo</h2>
+                <div class="workflow-steps">
+                    <div class="workflow-step">
+                        <div class="step-number">1</div>
+                        <div class="step-content">
+                            <div class="step-title">Registrar</div>
+                            <div class="step-description">Elige registro manual o visual desde + Registrar</div>
+                        </div>
+                    </div>
+                    <div class="workflow-step">
+                        <div class="step-number">2</div>
+                        <div class="step-content">
+                            <div class="step-title">Completar</div>
+                            <div class="step-description">Llena los campos requeridos y pulsa Guardar</div>
+                        </div>
+                    </div>
+                    <div class="workflow-step">
+                        <div class="step-number">3</div>
+                        <div class="step-content">
+                            <div class="step-title">Sincronizar</div>
+                            <div class="step-description">El registro se envía a la API y se persiste</div>
+                        </div>
+                    </div>
+                    <div class="workflow-step">
+                        <div class="step-number">4</div>
+                        <div class="step-content">
+                            <div class="step-title">Actualizar</div>
+                            <div class="step-description">Dashboard y Ver registros se actualizan en tiempo real</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="main-content">
+                <div class="dashboard-left">
+                    <div class="cash-card">
+                        <div class="cash-header">
+                            <h2 class="cash-title">Cash</h2>
+                            <button class="btn btn-add-account" id="addAccountBtn">
+                                <i class="fas fa-plus"></i>
+                                Add Account
+                            </button>
+                        </div>
+                        <div class="cash-amount">COP 0.00</div>
+                    </div>
+
+                    <div class="gauges-card">
+                        <div class="gauges-container">
+                            <div class="gauge">
+                                <div class="gauge-circle">
+                                    <div class="gauge-circle-bg"></div>
+                                    <div class="gauge-circle-fill" id="balanceGauge"></div>
+                                    <div class="gauge-circle-mask"></div>
+                                    <div class="gauge-value">0%</div>
+                                </div>
+                                <div class="gauge-label">BALANCE</div>
+                                <div class="gauge-sublabel">COP 0.00</div>
+                            </div>
+
+                            <div class="gauge">
+                                <div class="gauge-circle">
+                                    <div class="gauge-circle-bg"></div>
+                                    <div class="gauge-circle-fill" id="cashflowGauge"></div>
+                                    <div class="gauge-circle-mask"></div>
+                                    <div class="gauge-value">0%</div>
+                                </div>
+                                <div class="gauge-label">CASH FLOW</div>
+                                <div class="gauge-sublabel">COP 0.00</div>
+                            </div>
+
+                            <div class="gauge">
+                                <div class="gauge-circle">
+                                    <div class="gauge-circle-bg"></div>
+                                    <div class="gauge-circle-fill" id="spendingGauge"></div>
+                                    <div class="gauge-circle-mask"></div>
+                                    <div class="gauge-value">0%</div>
+                                </div>
+                                <div class="gauge-label">SPENDING</div>
+                                <div class="gauge-sublabel">COP 0.00</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="dashboard-right">
+                    <div class="date-selector-card">
+                        <div class="date-selector-header">
+                            <h3 class="date-selector-title">Period</h3>
+                            <div class="date-display">
+                                <i class="fas fa-calendar"></i>
+                                <span id="selectedMonth">Oct 2025</span>
+                            </div>
+                        </div>
+
+                        <div class="time-range-options">
+                            <div class="time-range-option">Custom range</div>
+                            <div class="time-range-option">Weeks</div>
+                            <div class="time-range-option active">Months</div>
+                            <div class="time-range-option">Years</div>
+                        </div>
+
+                        <div class="months-grid">
+                            <div class="month-item">Jan</div>
+                            <div class="month-item">Feb</div>
+                            <div class="month-item">Mar</div>
+                            <div class="month-item">Apr</div>
+                            <div class="month-item">May</div>
+                            <div class="month-item">Jun</div>
+                            <div class="month-item">Jul</div>
+                            <div class="month-item">Aug</div>
+                            <div class="month-item">Sep</div>
+                            <div class="month-item current">Oct</div>
+                            <div class="month-item">Nov</div>
+                            <div class="month-item">Dec</div>
+                        </div>
+                    </div>
+
+                    <div class="accounts-card">
+                        <div class="accounts-header">
+                            <h3 class="accounts-title">Accounts</h3>
+                            <button class="btn btn-add-account">
+                                <i class="fas fa-plus"></i>
+                            </button>
+                        </div>
+
+                        <div class="account-list">
+                            <div class="account-item">
+                                <span class="account-name">Ahorros</span>
+                                <span class="account-amount">COP 0.00</span>
+                            </div>
+                            <div class="account-item">
+                                <span class="account-name">Corriente</span>
+                                <span class="account-amount">COP 0.00</span>
+                            </div>
+                            <div class="account-item">
+                                <span class="account-name">Tarjeta de Crédito</span>
+                                <span class="account-amount">COP 0.00</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- View Records Page -->
+    <div class="view-records-container" id="viewRecordsPage">
+        <header class="records-header">
+            <div class="container">
+                <div class="records-header-content">
+                    <div style="display: flex; align-items: center; gap: 16px;">
+                        <button class="btn btn-back" id="backToDashboard">
+                            <i class="fas fa-arrow-left"></i>
+                            Volver
+                        </button>
+                        <h1 class="records-title">Ver Registros</h1>
+                    </div>
+                    <div class="records-actions">
+                        <button class="btn btn-export" id="exportBtn">
+                            <i class="fas fa-download"></i>
+                            Exportar
+                        </button>
+                        <button class="btn btn-primary" id="addRecordFromView">
+                            <i class="fas fa-plus"></i>
+                            Nuevo registro
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <div class="container">
+            <div class="records-filters">
+                <div class="filters-grid">
+                    <div class="search-box">
+                        <i class="fas fa-search search-icon"></i>
+                        <input type="text" class="search-input" placeholder="Buscar registros..." id="searchInput">
+                    </div>
+                    <div class="form-group">
+                        <select class="form-select" id="filterType">
+                            <option value="all">Todos los tipos</option>
+                            <option value="income">Ingresos</option>
+                            <option value="expense">Gastos</option>
+                            <option value="transfer">Transferencias</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <select class="form-select" id="filterCategory">
+                            <option value="all">Todas las categorías</option>
+                            <option value="food">Alimentación</option>
+                            <option value="transport">Transporte</option>
+                            <option value="shopping">Compras</option>
+                            <option value="bills">Facturas</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <input type="date" class="form-input" id="filterDate">
+                    </div>
+                </div>
+            </div>
+
+            <div class="records-list" id="recordsList">
+                <!-- Records will be dynamically added here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Accounts Page -->
+    <div class="accounts-container" id="accountsPage">
+        <header class="accounts-header">
+            <div class="container">
+                <div class="accounts-header-content">
+                    <div style="display: flex; align-items: center; gap: 16px;">
+                        <button class="btn btn-back" id="backToDashboardFromAccounts">
+                            <i class="fas fa-arrow-left"></i>
+                            Volver
+                        </button>
+                        <h1 class="accounts-title">Accounts</h1>
+                    </div>
+                    <button class="btn btn-primary" id="addNewAccount">
+                        <i class="fas fa-plus"></i>
+                        Nueva cuenta
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <div class="container">
+            <div class="accounts-grid">
+                <div class="account-card">
+                    <div class="account-card-icon savings">
+                        <i class="fas fa-piggy-bank"></i>
+                    </div>
+                    <div class="account-card-name">Cuenta de Ahorros</div>
+                    <div class="account-card-type">Ahorros</div>
+                    <div class="account-card-balance">COP 5,250,000.00</div>
+                    <div class="account-card-actions">
+                        <button class="btn-account-action">
+                            <i class="fas fa-eye"></i> Ver
+                        </button>
+                        <button class="btn-account-action">
+                            <i class="fas fa-edit"></i> Editar
+                        </button>
+                    </div>
+                </div>
+
+                <div class="account-card">
+                    <div class="account-card-icon checking">
+                        <i class="fas fa-wallet"></i>
+                    </div>
+                    <div class="account-card-name">Cuenta Corriente</div>
+                    <div class="account-card-type">Corriente</div>
+                    <div class="account-card-balance">COP 1,845,500.00</div>
+                    <div class="account-card-actions">
+                        <button class="btn-account-action">
+                            <i class="fas fa-eye"></i> Ver
+                        </button>
+                        <button class="btn-account-action">
+                            <i class="fas fa-edit"></i> Editar
+                        </button>
+                    </div>
+                </div>
+
+                <div class="account-card">
+                    <div class="account-card-icon credit">
+                        <i class="fas fa-credit-card"></i>
+                    </div>
+                    <div class="account-card-name">Tarjeta de Crédito</div>
+                    <div class="account-card-type">Crédito</div>
+                    <div class="account-card-balance">COP -850,000.00</div>
+                    <div class="account-card-actions">
+                        <button class="btn-account-action">
+                            <i class="fas fa-eye"></i> Ver
+                        </button>
+                        <button class="btn-account-action">
+                            <i class="fas fa-edit"></i> Editar
+                        </button>
+                    </div>
+                </div>
+
+                <div class="account-card">
+                    <div class="account-card-icon investment">
+                        <i class="fas fa-chart-line"></i>
+                    </div>
+                    <div class="account-card-name">Cuenta de Inversión</div>
+                    <div class="account-card-type">Inversión</div>
+                    <div class="account-card-balance">COP 12,750,000.00</div>
+                    <div class="account-card-actions">
+                        <button class="btn-account-action">
+                            <i class="fas fa-eye"></i> Ver
+                        </button>
+                        <button class="btn-account-action">
+                            <i class="fas fa-edit"></i> Editar
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Reports Page -->
+    <div class="reports-container" id="reportsPage">
+        <header class="reports-header">
+            <div class="container">
+                <div class="reports-header-content">
+                    <div style="display: flex; align-items: center; gap: 16px;">
+                        <button class="btn btn-back" id="backToDashboardFromReports">
+                            <i class="fas fa-arrow-left"></i>
+                            Volver
+                        </button>
+                        <h1 class="reports-title">Reports</h1>
+                    </div>
+                    <div class="reports-period-selector">
+                        <select class="form-select" id="reportPeriod">
+                            <option value="current-month">Mes actual</option>
+                            <option value="last-month">Mes pasado</option>
+                            <option value="current-year">Año actual</option>
+                            <option value="custom">Personalizado</option>
+                        </select>
+                        <button class="btn btn-primary">
+                            <i class="fas fa-download"></i>
+                            Exportar reporte
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <div class="container">
+            <div class="reports-content">
+                <div class="report-card">
+                    <div class="report-card-title">
+                        <div class="report-card-icon income">
+                            <i class="fas fa-arrow-down"></i>
+                        </div>
+                        Resumen de Ingresos
+                    </div>
+                    <div class="report-metric">
+                        <span class="report-metric-label">Total ingresos</span>
+                        <span class="report-metric-value">COP 8,500,000.00</span>
+                    </div>
+                    <div class="report-metric">
+                        <span class="report-metric-label">Promedio mensual</span>
+                        <span class="report-metric-value">COP 2,125,000.00</span>
+                    </div>
+                    <div class="report-metric">
+                        <span class="report-metric-label">Fuente principal</span>
+                        <span class="report-metric-value">Salario (75%)</span>
+                    </div>
+                    <div class="chart-container">
+                        <div class="chart-bar" style="height: 80%;">
+                            <span class="chart-bar-label">Ene</span>
+                        </div>
+                        <div class="chart-bar" style="height: 100%;">
+                            <span class="chart-bar-label">Feb</span>
+                        </div>
+                        <div class="chart-bar" style="height: 60%;">
+                            <span class="chart-bar-label">Mar</span>
+                        </div>
+                        <div class="chart-bar" style="height: 90%;">
+                            <span class="chart-bar-label">Abr</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="report-card">
+                    <div class="report-card-title">
+                        <div class="report-card-icon expense">
+                            <i class="fas fa-arrow-up"></i>
+                        </div>
+                        Resumen de Gastos
+                    </div>
+                    <div class="report-metric">
+                        <span class="report-metric-label">Total gastos</span>
+                        <span class="report-metric-value">COP 5,245,000.00</span>
+                    </div>
+                    <div class="report-metric">
+                        <span class="report-metric-label">Promedio mensual</span>
+                        <span class="report-metric-value">COP 1,311,250.00</span>
+                    </div>
+                    <div class="report-metric">
+                        <span class="report-metric-label">Categoría principal</span>
+                        <span class="report-metric-value">Alimentación (35%)</span>
+                    </div>
+                    <div class="chart-container">
+                        <div class="chart-bar expense" style="height: 70%;">
+                            <span class="chart-bar-label">Ene</span>
+                        </div>
+                        <div class="chart-bar expense" style="height: 85%;">
+                            <span class="chart-bar-label">Feb</span>
+                        </div>
+                        <div class="chart-bar expense" style="height: 60%;">
+                            <span class="chart-bar-label">Mar</span>
+                        </div>
+                        <div class="chart-bar expense" style="height: 75%;">
+                            <span class="chart-bar-label">Abr</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="report-card">
+                    <div class="report-card-title">
+                        <div class="report-card-icon balance">
+                            <i class="fas fa-balance-scale"></i>
+                        </div>
+                        Balance Neto
+                    </div>
+                    <div class="report-metric">
+                        <span class="report-metric-label">Balance actual</span>
+                        <span class="report-metric-value" style="color: var(--primary);">COP 3,255,000.00</span>
+                    </div>
+                    <div class="report-metric">
+                        <span class="report-metric-label">Tasa de ahorro</span>
+                        <span class="report-metric-value">38.3%</span>
+                    </div>
+                    <div class="report-metric">
+                        <span class="report-metric-label">Proyección anual</span>
+                        <span class="report-metric-value">COP 39,060,000.00</span>
+                    </div>
+                    <div class="chart-container">
+                        <div class="chart-bar" style="height: 60%; background-color: var(--accent);">
+                            <span class="chart-bar-label">Ene</span>
+                        </div>
+                        <div class="chart-bar" style="height: 75%; background-color: var(--accent);">
+                            <span class="chart-bar-label">Feb</span>
+                        </div>
+                        <div class="chart-bar" style="height: 45%; background-color: var(--accent);">
+                            <span class="chart-bar-label">Mar</span>
+                        </div>
+                        <div class="chart-bar" style="height: 80%; background-color: var(--accent);">
+                            <span class="chart-bar-label">Abr</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="report-card">
+                    <div class="report-card-title">
+                        <div class="report-card-icon balance">
+                            <i class="fas fa-chart-pie"></i>
+                        </div>
+                        Distribución por Categoría
+                    </div>
+                    <div class="report-metric">
+                        <span class="report-metric-label">Alimentación</span>
+                        <span class="report-metric-value">35%</span>
+                    </div>
+                    <div class="report-metric">
+                        <span class="report-metric-label">Transporte</span>
+                        <span class="report-metric-value">20%</span>
+                    </div>
+                    <div class="report-metric">
+                        <span class="report-metric-label">Vivienda</span>
+                        <span class="report-metric-value">25%</span>
+                    </div>
+                    <div class="report-metric">
+                        <span class="report-metric-label">Otros</span>
+                        <span class="report-metric-value">20%</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Visual Record Overlay -->
+    <div class="visual-record-overlay" id="visualRecordOverlay">
+        <div class="visual-record-content">
+            <div class="visual-record-header">
+                <h2 class="visual-record-title">Registro Visual</h2>
+                <button class="visual-record-close" id="closeVisualRecord">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+
+            <div class="visual-record-body">
+                <div class="visual-record-tabs">
+                    <button class="visual-tab active" data-mode="upload">Subir Imagen</button>
+                    <button class="visual-tab" data-mode="manual">Manual</button>
+                </div>
+
+                <div class="visual-form-grid">
+                    <div class="visual-upload-area" id="uploadArea">
+                        <i class="fas fa-cloud-upload-alt upload-icon"></i>
+                        <div class="upload-text">Arrastra y suelta una imagen aquí</div>
+                        <div class="upload-subtext">o haz clic para seleccionar</div>
+                        <input type="file" id="fileInput" accept="image/*" style="display: none;">
+                    </div>
+
+                    <div class="visual-preview" id="visualPreview">
+                        <img src="" alt="Preview" class="preview-image" id="previewImage">
+                        <button class="preview-remove" id="removePreview">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Monto <span class="required">*</span></label>
+                        <div class="amount-input-group">
+                            <span class="amount-currency">$</span>
+                            <input type="number" class="amount-input" placeholder="0.00" step="0.01" id="visualAmount">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Categoría <span class="required">*</span></label>
+                        <div class="select-wrapper">
+                            <select class="form-select" id="visualCategory">
+                                <option value="">Seleccionar categoría</option>
+                                <option value="food">Alimentación</option>
+                                <option value="transport">Transporte</option>
+                                <option value="shopping">Compras</option>
+                                <option value="bills">Facturas</option>
+                                <option value="entertainment">Entretenimiento</option>
+                                <option value="health">Salud</option>
+                                <option value="education">Educación</option>
+                                <option value="other">Otros</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Fecha</label>
+                        <input type="date" class="form-input" id="visualDate">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Cuenta</label>
+                        <div class="select-wrapper">
+                            <select class="form-select" id="visualAccount">
+                                <option value="cash">Efectivo</option>
+                                <option value="savings">Ahorros</option>
+                                <option value="checking">Corriente</option>
+                                <option value="credit">Tarjeta de Crédito</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-group" style="grid-column: span 2;">
+                        <label class="form-label">Notas</label>
+                        <textarea class="form-input" rows="3" placeholder="Agregar notas..." id="visualNotes"></textarea>
+                    </div>
+                </div>
+
+                <div class="manual-record-footer">
+                    <div class="footer-info">
+                        <span style="color: var(--text-secondary); font-size: 14px;">Los campos marcados con * son obligatorios</span>
+                    </div>
+                    <div class="footer-actions">
+                        <button class="btn btn-cancel-record" id="cancelVisualRecord">Cancelar</button>
+                        <button class="btn btn-add-record-confirm" id="saveVisualRecord">Guardar Registro</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Manual Record Modal -->
+    <div class="manual-record-modal" id="manualRecordModal">
+        <div class="manual-record-content">
+            <div class="manual-record-header">
+                <h2 class="manual-record-title">Registro Manual</h2>
+                <div class="record-tabs">
+                    <div class="record-tab active" data-tab="expense">Gasto</div>
+                    <div class="record-tab" data-tab="income">Ingreso</div>
+                    <div class="record-tab" data-tab="transfer">Transferencia</div>
+                </div>
+            </div>
+
+            <div class="manual-record-body">
+                <div class="record-left-section">
+                    <div class="form-group">
+                        <label class="form-label">Monto <span class="required">*</span></label>
+                        <div class="amount-input-group">
+                            <span class="amount-currency">$</span>
+                            <input type="number" class="amount-input" placeholder="0.00" step="0.01">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Cuenta <span class="required">*</span></label>
+                        <div class="select-wrapper">
+                            <select class="form-select">
+                                <option value="cash" selected>Efectivo</option>
+                                <option value="savings">Ahorros</option>
+                                <option value="checking">Corriente</option>
+                                <option value="credit">Tarjeta de Crédito</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Categoría <span class="required">*</span></label>
+                        <div class="select-wrapper">
+                            <select class="form-select" id="categorySelect">
+                                <option value="">Seleccionar categoría</option>
+                            </select>
+                        </div>
+                        <div class="category-pills" id="categoryPills">
+                            <!-- Categories will be dynamically added based on selection -->
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Etiquetas</label>
+                        <div class="labels-input-container">
+                            <div class="labels-display" id="labelsDisplay">
+                                <input type="text" class="label-input" placeholder="Agregar etiquetas...">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Fecha y Hora</label>
+                        <input type="datetime-local" class="datetime-input" id="datetimeInput">
+                    </div>
+                </div>
+
+                <div class="record-right-section">
+                    <h3 class="other-details-title">Otros detalles</h3>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Nota</label>
+                        <textarea class="form-input" rows="3" placeholder="Agregar una nota..."></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Pagador</label>
+                        <input type="text" class="form-input" placeholder="Ingrese nombre del pagador">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Tipo de pago</label>
+                        <div class="select-wrapper">
+                            <select class="form-select">
+                                <option value="cash" selected>Efectivo</option>
+                                <option value="card">Tarjeta</option>
+                                <option value="transfer">Transferencia</option>
+                                <option value="check">Cheque</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Estado del pago</label>
+                        <div class="select-wrapper">
+                            <select class="form-select">
+                                <option value="cleared" selected>Completado</option>
+                                <option value="pending">Pendiente</option>
+                                <option value="failed">Fallido</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="manual-record-footer">
+                <div class="footer-info">
+                    <span style="color: var(--text-secondary); font-size: 14px;">Todos los campos marcados con * son obligatorios</span>
+                </div>
+                <div class="footer-actions">
+                    <button class="btn btn-cancel-record" id="cancelManualRecord">Cancelar</button>
+                    <button class="btn btn-add-record-confirm" id="addManualRecord">Agregar registro</button>
+                    <button class="btn btn-add-another" id="addAnotherManual">Agregar y crear otro</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal -->
+    <div class="modal" id="addAccountModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Agregar Nueva Cuenta</h3>
+                <button class="modal-close" id="closeModal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label class="form-label" for="accountName">Nombre de la cuenta</label>
+                    <input type="text" id="accountName" class="form-input" placeholder="Ingrese nombre de cuenta">
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="accountType">Tipo de cuenta</label>
+                    <select id="accountType" class="form-input">
+                        <option value="savings">Ahorros</option>
+                        <option value="checking">Corriente</option>
+                        <option value="credit">Tarjeta de Crédito</option>
+                        <option value="investment">Inversión</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="initialBalance">Balance inicial</label>
+                    <input type="number" id="initialBalance" class="form-input" placeholder="0.00">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-cancel" id="cancelAddAccount">Cancelar</button>
+                <button class="btn btn-confirm" id="confirmAddAccount">Agregar cuenta</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notification -->
+    <div class="notification" id="notification">
+        <div class="notification-icon">
+            <i class="fas fa-check"></i>
+        </div>
+        <div class="notification-message" id="notificationMessage">Operación exitosa</div>
+        <button class="notification-close" id="closeNotification">
+            <i class="fas fa-times"></i>
+        </button>
+    </div>
+
+    <script>
+        // SIMULACIÓN DE API REST COMPLETA
+        class CajaClaraAPI {
+            constructor() {
+                this.baseURL = 'https://api.cajaclara.com/v1';
+                this.isConnected = true;
+                this.records = [];
+            }
+
+            async createRecord(recordData) {
+                return new Promise((resolve, reject) => {
+                    setTimeout(() => {
+                        if (this.isConnected) {
+                            const record = {
+                                id: Date.now(),
+                                ...recordData,
+                                timestamp: new Date().toISOString()
+                            };
+                            this.records.push(record);
+                            console.log('✅ Registro creado en backend:', record);
+                            resolve(record);
+                        } else {
+                            reject(new Error('Error de conexión con la API'));
+                        }
+                    }, 800);
+                });
+            }
+
+            async getRecords() {
+                return new Promise((resolve) => {
+                    setTimeout(() => {
+                        console.log('📥 Obteniendo registros desde backend...');
+                        resolve(this.records);
+                    }, 300);
+                });
+            }
+
+            async updateRecord(id, updates) {
+                return new Promise((resolve) => {
+                    setTimeout(() => {
+                        const index = this.records.findIndex(r => r.id === id);
+                        if (index > -1) {
+                            this.records[index] = { ...this.records[index], ...updates };
+                            console.log('✏️ Registro actualizado en backend:', this.records[index]);
+                            resolve(this.records[index]);
+                        }
+                    }, 500);
+                });
+            }
+
+            async deleteRecord(id) {
+                return new Promise((resolve) => {
+                    setTimeout(() => {
+                        const index = this.records.findIndex(r => r.id === id);
+                        if (index > -1) {
+                            const deleted = this.records.splice(index, 1)[0];
+                            console.log('🗑️ Registro eliminado del backend:', deleted);
+                            resolve(deleted);
+                        }
+                    }, 500);
+                });
+            }
+        }
+
+        // Inicializar API
+        const api = new CajaClaraAPI();
+
+        // Estado global de la aplicación
+        let records = [];
+        let currentBalance = 0;
+
+        // DOM Elements
+        const loginPage = document.getElementById('loginPage');
+        const dashboardPage = document.getElementById('dashboardPage');
+        const viewRecordsPage = document.getElementById('viewRecordsPage');
+        const accountsPage = document.getElementById('accountsPage');
+        const reportsPage = document.getElementById('reportsPage');
+        const loginForm = document.getElementById('loginForm');
+        const guestBtn = document.getElementById('guestBtn');
+        const togglePassword = document.getElementById('togglePassword');
+        const passwordInput = document.getElementById('password');
+        const addAccountBtn = document.getElementById('addAccountBtn');
+        const addAccountModal = document.getElementById('addAccountModal');
+        const closeModal = document.getElementById('closeModal');
+        const cancelAddAccount = document.getElementById('cancelAddAccount');
+        const confirmAddAccount = document.getElementById('confirmAddAccount');
+        const notification = document.getElementById('notification');
+        const notificationMessage = document.getElementById('notificationMessage');
+        const closeNotification = document.getElementById('closeNotification');
+        const monthItems = document.querySelectorAll('.month-item');
+        const selectedMonth = document.getElementById('selectedMonth');
+        const timeRangeOptions = document.querySelectorAll('.time-range-option');
+        const navTabs = document.querySelectorAll('.nav-tab');
+
+        // Back buttons
+        const backToDashboard = document.getElementById('backToDashboard');
+        const backToDashboardFromAccounts = document.getElementById('backToDashboardFromAccounts');
+        const backToDashboardFromReports = document.getElementById('backToDashboardFromReports');
+
+        // Register Dropdown Elements
+        const registerBtn = document.getElementById('registerBtn');
+        const dropdownMenu = document.getElementById('dropdownMenu');
+        const manualRecordBtn = document.getElementById('manualRecordBtn');
+        const visualRecordBtn = document.getElementById('visualRecordBtn');
+        const viewRecordsBtn = document.getElementById('viewRecordsBtn');
+
+        // Manual Record Modal Elements
+        const manualRecordModal = document.getElementById('manualRecordModal');
+        const cancelManualRecord = document.getElementById('cancelManualRecord');
+        const addManualRecord = document.getElementById('addManualRecord');
+        const addAnotherManual = document.getElementById('addAnotherManual');
+        const recordTabs = document.querySelectorAll('.record-tab');
+        const categorySelect = document.getElementById('categorySelect');
+        const categoryPills = document.getElementById('categoryPills');
+        const datetimeInput = document.getElementById('datetimeInput');
+        const labelsDisplay = document.getElementById('labelsDisplay');
+        const labelInput = labelsDisplay.querySelector('.label-input');
+
+        // Visual Record Elements
+        const visualRecordOverlay = document.getElementById('visualRecordOverlay');
+        const closeVisualRecord = document.getElementById('closeVisualRecord');
+        const cancelVisualRecord = document.getElementById('cancelVisualRecord');
+        const saveVisualRecord = document.getElementById('saveVisualRecord');
+        const uploadArea = document.getElementById('uploadArea');
+        const fileInput = document.getElementById('fileInput');
+        const visualPreview = document.getElementById('visualPreview');
+        const previewImage = document.getElementById('previewImage');
+        const removePreview = document.getElementById('removePreview');
+        const visualTabs = document.querySelectorAll('.visual-tab');
+
+        // View Records Elements
+        const addRecordFromView = document.getElementById('addRecordFromView');
+        const exportBtn = document.getElementById('exportBtn');
+        const searchInput = document.getElementById('searchInput');
+        const filterType = document.getElementById('filterType');
+        const filterCategory = document.getElementById('filterCategory');
+        const filterDate = document.getElementById('filterDate');
+        const recordsList = document.getElementById('recordsList');
+
+        // Accounts and Reports buttons
+        const addNewAccount = document.getElementById('addNewAccount');
+        const reportPeriod = document.getElementById('reportPeriod');
+
+        // Categorías para diferentes tipos
+        const categories = {
+            expense: ['Alimentación', 'Transporte', 'Compras', 'Entretenimiento', 'Facturas y Servicios', 'Salud', 'Educación', 'Viajes', 'Regalos y Donaciones', 'Otros'],
+            income: ['Salario', 'Freelance', 'Inversiones', 'Negocio', 'Alquiler', 'Regalos', 'Reembolsos', 'Otros'],
+            transfer: ['Entre Cuentas', 'A Externo', 'Desde Externo']
+        };
+
+        // Inicializar categorías
+        function updateCategories(tab) {
+            categorySelect.innerHTML = '<option value="">Seleccionar categoría</option>';
+            categories[tab].forEach(cat => {
+                const option = document.createElement('option');
+                option.value = cat.toLowerCase().replace(/\s+/g, '-');
+                option.textContent = cat;
+                categorySelect.appendChild(option);
+            });
+            
+            // Actualizar pills de categorías
+            categoryPills.innerHTML = '';
+            categories[tab].forEach(cat => {
+                const pill = document.createElement('div');
+                pill.className = 'category-pill';
+                pill.textContent = cat;
+                pill.addEventListener('click', () => {
+                    document.querySelectorAll('.category-pill').forEach(p => p.classList.remove('selected'));
+                    pill.classList.add('selected');
+                    categorySelect.value = cat.toLowerCase().replace(/\s+/g, '-');
+                });
+                categoryPills.appendChild(pill);
+            });
+        }
+
+        // Establecer fecha y hora actual
+        function setCurrentDateTime() {
+            const now = new Date();
+            const year = now.getFullYear();
+            const month = String(now.getMonth() + 1).padStart(2, '0');
+            const day = String(now.getDate()).padStart(2, '0');
+            const hours = String(now.getHours()).padStart(2, '0');
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            datetimeInput.value = `${year}-${month}-${day}T${hours}:${minutes}`;
+            
+            // Establecer fecha para registro visual
+            document.getElementById('visualDate').value = `${year}-${month}-${day}`;
+        }
+
+        // Función para mostrar/ocultar páginas
+        function showPage(pageName) {
+            // Ocultar todas las páginas
+            loginPage.style.display = 'none';
+            dashboardPage.style.display = 'none';
+            viewRecordsPage.style.display = 'none';
+            accountsPage.style.display = 'none';
+            reportsPage.style.display = 'none';
+            
+            // Mostrar la página solicitada
+            switch(pageName) {
+                case 'login':
+                    loginPage.style.display = 'flex';
+                    break;
+                case 'dashboard':
+                    dashboardPage.style.display = 'block';
+                    break;
+                case 'records':
+                    viewRecordsPage.style.display = 'block';
+                    loadRecords();
+                    break;
+                case 'accounts':
+                    accountsPage.style.display = 'block';
+                    break;
+                case 'reports':
+                    reportsPage.style.display = 'block';
+                    break;
+            }
+        }
+
+        // Función para actualizar pestañas activas
+        function updateActiveTab(pageName) {
+            navTabs.forEach(tab => {
+                tab.classList.remove('active');
+                if (tab.dataset.page === pageName) {
+                    tab.classList.add('active');
+                }
+            });
+        }
+
+        // Event listeners para navegación
+        navTabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                const page = tab.dataset.page;
+                updateActiveTab(page);
+                showPage(page);
+            });
+        });
+
+        // Event listeners para botones de volver
+        backToDashboard.addEventListener('click', () => {
+            updateActiveTab('dashboard');
+            showPage('dashboard');
+        });
+
+        backToDashboardFromAccounts.addEventListener('click', () => {
+            updateActiveTab('dashboard');
+            showPage('dashboard');
+        });
+
+        backToDashboardFromReports.addEventListener('click', () => {
+            updateActiveTab('dashboard');
+            showPage('dashboard');
+        });
+
+        // Toggle del menú desplegable
+        registerBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            dropdownMenu.classList.toggle('show');
+        });
+
+        // Cerrar dropdown al hacer clic fuera
+        document.addEventListener('click', () => {
+            dropdownMenu.classList.remove('show');
+        });
+
+        dropdownMenu.addEventListener('click', (e) => {
+            e.stopPropagation();
+        });
+
+        // Acciones del menú desplegable
+        manualRecordBtn.addEventListener('click', () => {
+            dropdownMenu.classList.remove('show');
+            manualRecordModal.style.display = 'flex';
+            setCurrentDateTime();
+            updateCategories('expense');
+        });
+
+        visualRecordBtn.addEventListener('click', () => {
+            dropdownMenu.classList.remove('show');
+            visualRecordOverlay.style.display = 'flex';
+            setCurrentDateTime();
+        });
+
+        viewRecordsBtn.addEventListener('click', () => {
+            dropdownMenu.classList.remove('show');
+            updateActiveTab('records');
+            showPage('records');
+        });
+
+        // Toggle visibilidad de contraseña
+        togglePassword.addEventListener('click', () => {
+            const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+            passwordInput.setAttribute('type', type);
+            togglePassword.innerHTML = type === 'password' ? '<i class="fas fa-eye"></i>' : '<i class="fas fa-eye-slash"></i>';
+        });
+
+        // Envío del formulario de login
+        loginForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            
+            // Mostrar estado de carga
+            const loginBtn = document.getElementById('loginBtn');
+            const originalText = loginBtn.innerHTML;
+            loginBtn.innerHTML = '<span class="loading"></span>';
+            loginBtn.disabled = true;
+            
+            // Simular llamada a API
+            setTimeout(() => {
+                loginBtn.innerHTML = originalText;
+                loginBtn.disabled = false;
+                
+                showNotification('Inicio de sesión exitoso', 'success');
+                
+                setTimeout(() => {
+                    updateActiveTab('dashboard');
+                    showPage('dashboard');
+                    initializeDashboard();
+                }, 1000);
+            }, 1500);
+        });
+
+        // Login como invitado
+        guestBtn.addEventListener('click', () => {
+            showNotification('Ingresando como invitado', 'success');
+            
+            setTimeout(() => {
+                updateActiveTab('dashboard');
+                showPage('dashboard');
+                initializeDashboard();
+            }, 1000);
+        });
+
+        // Inicializar dashboard
+        function initializeDashboard() {
+            setTimeout(() => {
+                animateGauge('balanceGauge', 65);
+                animateGauge('cashflowGauge', 40);
+                animateGauge('spendingGauge', 25);
+            }, 500);
+        }
+
+        // Animar medidores
+        function animateGauge(gaugeId, percentage) {
+            const gauge = document.getElementById(gaugeId);
+            const gaugeValue = gauge.parentElement.querySelector('.gauge-value');
+            const gaugeSublabel = gauge.parentElement.querySelector('.gauge-sublabel');
+            
+            const rotation = 180 * (percentage / 100);
+            
+            gauge.style.background = `conic-gradient(
+                from 180deg,
+                var(--primary) 0deg,
+                var(--primary) ${rotation}deg,
+                transparent ${rotation}deg
+            )`;
+            
+            let currentPercentage = 0;
+            const increment = percentage / 30;
+            const interval = setInterval(() => {
+                currentPercentage += increment;
+                if (currentPercentage >= percentage) {
+                    currentPercentage = percentage;
+                    clearInterval(interval);
+                }
+                
+                gaugeValue.textContent = `${Math.round(currentPercentage)}%`;
+                
+                const mockValue = Math.round(currentPercentage * 10000);
+                gaugeSublabel.textContent = `COP ${mockValue.toLocaleString('es-CO')}.00`;
+            }, 50);
+        }
+
+        // Selección de meses
+        monthItems.forEach(item => {
+            item.addEventListener('click', () => {
+                monthItems.forEach(m => m.classList.remove('current'));
+                item.classList.add('current');
+                
+                const month = item.textContent;
+                const year = 2025;
+                selectedMonth.textContent = `${month} ${year}`;
+                
+                animateGauge('balanceGauge', Math.floor(Math.random() * 100));
+                animateGauge('cashflowGauge', Math.floor(Math.random() * 100));
+                animateGauge('spendingGauge', Math.floor(Math.random() * 100));
+            });
+        });
+
+        // Opciones de rango de tiempo
+        timeRangeOptions.forEach(option => {
+            option.addEventListener('click', () => {
+                timeRangeOptions.forEach(o => o.classList.remove('active'));
+                option.classList.add('active');
+            });
+        });
+
+        // Controles del modal de registro visual
+        closeVisualRecord.addEventListener('click', () => {
+            visualRecordOverlay.style.display = 'none';
+            resetVisualForm();
+        });
+
+        cancelVisualRecord.addEventListener('click', () => {
+            visualRecordOverlay.style.display = 'none';
+            resetVisualForm();
+        });
+
+        // Pestañas visuales
+        visualTabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                visualTabs.forEach(t => t.classList.remove('active'));
+                tab.classList.add('active');
+                
+                if (tab.dataset.mode === 'manual') {
+                    uploadArea.style.display = 'none';
+                } else {
+                    uploadArea.style.display = 'block';
+                }
+            });
+        });
+
+        // Subida de archivos
+        uploadArea.addEventListener('click', () => {
+            fileInput.click();
+        });
+
+        fileInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    previewImage.src = e.target.result;
+                    visualPreview.style.display = 'block';
+                    uploadArea.style.display = 'none';
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        removePreview.addEventListener('click', () => {
+            visualPreview.style.display = 'none';
+            uploadArea.style.display = 'block';
+            previewImage.src = '';
+            fileInput.value = '';
+        });
+
+        // Guardar registro visual con integración API
+        saveVisualRecord.addEventListener('click', async () => {
+            const amount = document.getElementById('visualAmount').value;
+            const category = document.getElementById('visualCategory').value;
+            const date = document.getElementById('visualDate').value;
+            const account = document.getElementById('visualAccount').value;
+            const notes = document.getElementById('visualNotes').value;
+            
+            if (!amount || !category) {
+                showNotification('Por favor completa los campos obligatorios', 'error');
+                return;
+            }
+            
+            try {
+                showNotification('Enviando registro a la API...', 'info');
+                
+                const recordData = {
+                    type: 'expense',
+                    amount: parseFloat(amount),
+                    category: category,
+                    date: date,
+                    account: account,
+                    notes: notes,
+                    source: 'visual'
+                };
+                
+                const record = await api.createRecord(recordData);
+                
+                currentBalance -= parseFloat(amount);
+                updateDashboardBalance();
+                
+                showNotification('✅ Registro guardado exitosamente en backend', 'success');
+                
+                visualRecordOverlay.style.display = 'none';
+                resetVisualForm();
+                
+                setTimeout(() => {
+                    showNotification('🔄 Dashboard actualizado en tiempo real', 'success');
+                }, 1000);
+                
+            } catch (error) {
+                showNotification('❌ Error al guardar el registro: ' + error.message, 'error');
+            }
+        });
+
+        function resetVisualForm() {
+            document.getElementById('visualAmount').value = '';
+            document.getElementById('visualCategory').value = '';
+            document.getElementById('visualNotes').value = '';
+            visualPreview.style.display = 'none';
+            uploadArea.style.display = 'block';
+            previewImage.src = '';
+            fileInput.value = '';
+        }
+
+        // Controles del modal de registro manual
+        cancelManualRecord.addEventListener('click', () => {
+            manualRecordModal.style.display = 'none';
+            resetManualForm();
+        });
+
+        // Pestañas de registro
+        recordTabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                recordTabs.forEach(t => t.classList.remove('active'));
+                tab.classList.add('active');
+                updateCategories(tab.dataset.tab);
+            });
+        });
+
+        // Cambio de categoría
+        categorySelect.addEventListener('change', () => {
+            document.querySelectorAll('.category-pill').forEach(p => p.classList.remove('selected'));
+            if (categorySelect.value) {
+                const selectedPill = Array.from(categoryPills.children).find(p => 
+                    p.textContent.toLowerCase().replace(/\s+/g, '-') === categorySelect.value
+                );
+                if (selectedPill) {
+                    selectedPill.classList.add('selected');
+                }
+            }
+        });
+
+        // Funcionalidad de etiquetas
+        const labels = [];
+        labelInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' || e.key === ',') {
+                e.preventDefault();
+                const value = labelInput.value.trim();
+                if (value && !labels.includes(value)) {
+                    labels.push(value);
+                    renderLabels();
+                    labelInput.value = '';
+                }
+            }
+        });
+
+        function renderLabels() {
+            const existingTags = labelsDisplay.querySelectorAll('.label-tag');
+            existingTags.forEach(tag => tag.remove());
+            
+            labels.forEach((label, index) => {
+                const tag = document.createElement('div');
+                tag.className = 'label-tag';
+                tag.innerHTML = `
+                    ${label}
+                    <span class="label-remove" data-index="${index}">×</span>
+                `;
+                labelsDisplay.insertBefore(tag, labelInput);
+            });
+            
+            document.querySelectorAll('.label-remove').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const index = parseInt(btn.dataset.index);
+                    labels.splice(index, 1);
+                    renderLabels();
+                });
+            });
+        }
+
+        // Agregar registro manual con integración API
+        addManualRecord.addEventListener('click', async () => {
+            if (validateManualForm()) {
+                await saveManualRecord();
+                manualRecordModal.style.display = 'none';
+                resetManualForm();
+            }
+        });
+
+        addAnotherManual.addEventListener('click', async () => {
+            if (validateManualForm()) {
+                await saveManualRecord();
+                resetManualForm();
+                setCurrentDateTime();
+            }
+        });
+
+        function validateManualForm() {
+            const amount = document.querySelector('.manual-record-modal .amount-input').value;
+            const account = document.querySelector('.manual-record-modal .form-select').value;
+            const category = categorySelect.value;
+            
+            if (!amount || !account || !category) {
+                showNotification('Por favor completa todos los campos obligatorios', 'error');
+                return false;
+            }
+            
+            return true;
+        }
+
+        async function saveManualRecord() {
+            const amount = parseFloat(document.querySelector('.manual-record-modal .amount-input').value);
+            const activeTab = document.querySelector('.record-tab.active').dataset.tab;
+            
+            try {
+                showNotification('Enviando registro a la API...', 'info');
+                
+                const recordData = {
+                    type: activeTab,
+                    amount: amount,
+                    category: categorySelect.value,
+                    date: new Date().toISOString().split('T')[0],
+                    account: document.querySelector('.manual-record-modal .form-select').value,
+                    notes: document.querySelector('.manual-record-modal textarea').value,
+                    labels: labels,
+                    source: 'manual'
+                };
+                
+                const record = await api.createRecord(recordData);
+                
+                if (activeTab === 'income') {
+                    currentBalance += amount;
+                } else if (activeTab === 'expense') {
+                    currentBalance -= amount;
+                }
+                
+                updateDashboardBalance();
+                showNotification('✅ Registro agregado exitosamente', 'success');
+                
+                setTimeout(() => {
+                    showNotification('🔄 Dashboard actualizado en tiempo real', 'success');
+                }, 1000);
+                
+            } catch (error) {
+                showNotification('❌ Error al guardar el registro: ' + error.message, 'error');
+            }
+        }
+
+        function resetManualForm() {
+            document.querySelector('.manual-record-modal .amount-input').value = '';
+            document.querySelector('.manual-record-modal .form-select').value = 'cash';
+            categorySelect.value = '';
+            document.querySelectorAll('.category-pill').forEach(p => p.classList.remove('selected'));
+            document.querySelector('.manual-record-modal textarea').value = '';
+            document.querySelectorAll('.manual-record-modal .form-input[type="text"]').forEach(input => {
+                if (!input.classList.contains('label-input')) {
+                    input.value = '';
+                }
+            });
+            labels.length = 0;
+            renderLabels();
+        }
+
+        function updateDashboardBalance() {
+            document.querySelector('.cash-amount').textContent = `COP ${currentBalance.toLocaleString('es-CO', {minimumFractionDigits: 2})}`;
+            
+            const balancePercentage = Math.min(100, Math.max(0, (Math.abs(currentBalance) / 1000000) * 100));
+            animateGauge('balanceGauge', balancePercentage);
+        }
+
+        // Funcionalidad de Ver Registros
+        addRecordFromView.addEventListener('click', () => {
+            showPage('dashboard');
+            updateActiveTab('dashboard');
+            manualRecordBtn.click();
+        });
+
+        async function loadRecords() {
+            try {
+                const records = await api.getRecords();
+                
+                if (records.length === 0) {
+                    recordsList.innerHTML = `
+                        <div class="empty-state">
+                            <i class="fas fa-receipt empty-icon"></i>
+                            <h3 class="empty-title">No hay registros</h3>
+                            <p class="empty-text">Comienza agregando tu primer registro</p>
+                            <button class="btn btn-primary" onclick="document.getElementById('addRecordFromView').click()">
+                                <i class="fas fa-plus"></i>
+                                Agregar registro
+                            </button>
+                        </div>
+                    `;
+                    return;
+                }
+                
+                recordsList.innerHTML = '';
+                records.forEach(record => {
+                    const recordItem = document.createElement('div');
+                    recordItem.className = 'record-item';
+                    
+                    const iconClass = record.type === 'income' ? 'fa-arrow-down' : 
+                                     record.type === 'expense' ? 'fa-arrow-up' : 'fa-exchange-alt';
+                    
+                    const amountClass = record.type;
+                    const amountPrefix = record.type === 'income' ? '+' : 
+                                       record.type === 'expense' ? '-' : '';
+                    
+                    recordItem.innerHTML = `
+                        <div class="record-info">
+                            <div class="record-icon ${record.type}">
+                                <i class="fas ${iconClass}"></i>
+                            </div>
+                            <div class="record-details">
+                                <div class="record-category">${record.category}</div>
+                                <div class="record-date">${new Date(record.date).toLocaleDateString('es-CO')}</div>
+                            </div>
+                        </div>
+                        <div class="record-amount ${amountClass}">
+                            ${amountPrefix}$${record.amount.toLocaleString('es-CO', {minimumFractionDigits: 2})}
+                        </div>
+                        <div class="record-actions-menu">
+                            <button class="action-btn" onclick="editRecord(${record.id})">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="action-btn" onclick="deleteRecord(${record.id})">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    `;
+                    
+                    recordsList.appendChild(recordItem);
+                });
+            } catch (error) {
+                showNotification('Error al cargar los registros', 'error');
+            }
+        }
+
+        async function editRecord(id) {
+            try {
+                const record = records.find(r => r.id === id);
+                if (record) {
+                    showNotification('Editando registro: ' + record.category, 'success');
+                }
+            } catch (error) {
+                showNotification('Error al editar el registro', 'error');
+            }
+        }
+
+        async function deleteRecord(id) {
+            try {
+                showNotification('Eliminando registro...', 'info');
+                
+                const deletedRecord = await api.deleteRecord(id);
+                
+                if (deletedRecord.type === 'income') {
+                    currentBalance -= deletedRecord.amount;
+                } else if (deletedRecord.type === 'expense') {
+                    currentBalance += deletedRecord.amount;
+                }
+                
+                updateDashboardBalance();
+                loadRecords();
+                showNotification('✅ Registro eliminado exitosamente', 'success');
+                
+                setTimeout(() => {
+                    showNotification('🔄 Dashboard actualizado en tiempo real', 'success');
+                }, 1000);
+                
+            } catch (error) {
+                showNotification('❌ Error al eliminar el registro', 'error');
+            }
+        }
+
+        // Funcionalidad de exportación
+        exportBtn.addEventListener('click', () => {
+            if (records.length === 0) {
+                showNotification('No hay registros para exportar', 'error');
+                return;
+            }
+            
+            let csv = 'Tipo, Categoría, Monto, Fecha, Cuenta, Notas, Fuente\n';
+            records.forEach(record => {
+                csv += `${record.type}, ${record.category}, ${record.amount}, ${record.date}, ${record.account}, ${record.notes || ''}, ${record.source || 'manual'}\n`;
+            });
+            
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `cajaclara_registros_${new Date().toISOString().split('T')[0]}.csv`;
+            a.click();
+            
+            showNotification('Registros exportados exitosamente', 'success');
+        });
+
+        // Búsqueda y filtros
+        searchInput.addEventListener('input', filterRecords);
+        filterType.addEventListener('change', filterRecords);
+        filterCategory.addEventListener('change', filterRecords);
+        filterDate.addEventListener('change', filterRecords);
+
+        function filterRecords() {
+            const searchTerm = searchInput.value.toLowerCase();
+            const typeFilter = filterType.value;
+            const categoryFilter = filterCategory.value;
+            const dateFilter = filterDate.value;
+            
+            const filteredRecords = records.filter(record => {
+                const matchesSearch = record.category.toLowerCase().includes(searchTerm) || 
+                                     (record.notes && record.notes.toLowerCase().includes(searchTerm));
+                const matchesType = typeFilter === 'all' || record.type === typeFilter;
+                const matchesCategory = categoryFilter === 'all' || record.category === categoryFilter;
+                const matchesDate = !dateFilter || record.date === dateFilter;
+                
+                return matchesSearch && matchesType && matchesCategory && matchesDate;
+            });
+            
+            const tempRecords = records;
+            records = filteredRecords;
+            loadRecords();
+            records = tempRecords;
+        }
+
+        // Controles de modales
+        addAccountBtn.addEventListener('click', () => {
+            addAccountModal.style.display = 'flex';
+        });
+
+        addNewAccount.addEventListener('click', () => {
+            addAccountModal.style.display = 'flex';
+        });
+
+        closeModal.addEventListener('click', () => {
+            addAccountModal.style.display = 'none';
+        });
+
+        cancelAddAccount.addEventListener('click', () => {
+            addAccountModal.style.display = 'none';
+        });
+
+        confirmAddAccount.addEventListener('click', () => {
+            const accountName = document.getElementById('accountName').value;
+            const accountType = document.getElementById('accountType').value;
+            const initialBalance = document.getElementById('initialBalance').value;
+            
+            if (accountName) {
+                const accountList = document.querySelector('.account-list');
+                const newAccount = document.createElement('div');
+                newAccount.className = 'account-item';
+                newAccount.innerHTML = `
+                    <span class="account-name">${accountName}</span>
+                    <span class="account-amount">COP ${parseFloat(initialBalance || 0).toLocaleString('es-CO')}.00</span>
+                `;
+                accountList.appendChild(newAccount);
+                
+                document.getElementById('accountName').value = '';
+                document.getElementById('initialBalance').value = '';
+                
+                addAccountModal.style.display = 'none';
+                
+                showNotification('Cuenta agregada exitosamente', 'success');
+            } else {
+                showNotification('Por favor ingresa un nombre de cuenta', 'error');
+            }
+        });
+
+        // Sistema de notificaciones
+        function showNotification(message, type) {
+            notificationMessage.textContent = message;
+            notification.className = `notification ${type} show`;
+            
+            const icon = notification.querySelector('.notification-icon i');
+            if (type === 'success') {
+                icon.className = 'fas fa-check';
+            } else if (type === 'error') {
+                icon.className = 'fas fa-exclamation';
+            } else if (type === 'info') {
+                icon.className = 'fas fa-info';
+            }
+        }
+
+        closeNotification.addEventListener('click', () => {
+            notification.classList.remove('show');
+        });
+
+        // Auto-ocultar notificación después de 5 segundos
+        setTimeout(() => {
+            if (notification.classList.contains('show')) {
+                notification.classList.remove('show');
+            }
+        }, 5000);
+
+        // Cerrar modales al hacer clic fuera
+        window.addEventListener('click', (e) => {
+            if (e.target === addAccountModal) {
+                addAccountModal.style.display = 'none';
+            }
+            if (e.target === manualRecordModal) {
+                manualRecordModal.style.display = 'none';
+                resetManualForm();
+            }
+            if (e.target === visualRecordOverlay) {
+                visualRecordOverlay.style.display = 'none';
+                resetVisualForm();
+            }
+        });
+
+        // Inicialización
+        updateCategories('expense');
+        
+        // Agregar registros de ejemplo para demostración
+        records = [
+            {
+                id: 1,
+                type: 'expense',
+                amount: 150000,
+                category: 'food',
+                date: '2025-10-28',
+                account: 'cash',
+                notes: 'Almuerzo restaurante',
+                source: 'manual',
+                timestamp: new Date().toISOString()
+            },
+            {
+                id: 2,
+                type: 'income',
+                amount: 2000000,
+                category: 'salary',
+                date: '2025-10-25',
+                account: 'checking',
+                notes: 'Salario mensual',
+                source: 'manual',
+                timestamp: new Date().toISOString()
+            },
+            {
+                id: 3,
+                type: 'expense',
+                amount: 85000,
+                category: 'transport',
+                date: '2025-10-27',
+                account: 'cash',
+                notes: 'Transporte público',
+                source: 'visual',
+                timestamp: new Date().toISOString()
+            }
+        ];
+        
+        // Sincronizar registros con la API
+        api.records = records;
+        
+        // Calcular balance inicial
+        currentBalance = records.reduce((balance, record) => {
+            if (record.type === 'income') {
+                return balance + record.amount;
+            } else if (record.type === 'expense') {
+                return balance - record.amount;
+            }
+            return balance;
+        }, 0);
+
+        console.log('🚀 CajaClara MVP inicializada con', records.length, 'registros');
+        console.log('💰 Balance inicial:', currentBalance);
+        console.log('📊 MVP Features: Login, Dashboard, Records, Accounts, Reports, API Integration');
+    </script>
+</body>
+</html>
