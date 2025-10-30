@@ -11,6 +11,7 @@ from app.api.deps import get_default_user
 from app.core.exceptions import ValidationError
 from app.db.database import get_db
 from app.models.user import User
+from app.repositories.bank_account import BankAccountRepository
 from app.repositories.category import CategoryRepository
 from app.repositories.transaction import TransactionRepository
 from app.schemas.transaction import (CreateManualTransactionRequest,
@@ -58,10 +59,13 @@ async def create_manual_transaction(
     # Inicializar repositorios
     transaction_repo = TransactionRepository(db)
     category_repo = CategoryRepository(db)
+    bank_account_repo = BankAccountRepository(db)
 
     # Inicializar servicio
     transaction_service = TransactionService(
-        transaction_repo=transaction_repo, category_repo=category_repo
+        transaction_repo=transaction_repo,
+        category_repo=category_repo,
+        bank_account_repo=bank_account_repo,
     )
 
     # Crear transacción
@@ -120,8 +124,11 @@ async def list_transactions(
     # Inicializar repositorios y servicio
     transaction_repo = TransactionRepository(db)
     category_repo = CategoryRepository(db)
+    bank_account_repo = BankAccountRepository(db)
     transaction_service = TransactionService(
-        transaction_repo=transaction_repo, category_repo=category_repo
+        transaction_repo=transaction_repo,
+        category_repo=category_repo,
+        bank_account_repo=bank_account_repo,
     )
 
     # Listar transacciones
@@ -164,8 +171,11 @@ async def get_transaction(
     # Inicializar repositorios y servicio
     transaction_repo = TransactionRepository(db)
     category_repo = CategoryRepository(db)
+    bank_account_repo = BankAccountRepository(db)
     transaction_service = TransactionService(
-        transaction_repo=transaction_repo, category_repo=category_repo
+        transaction_repo=transaction_repo,
+        category_repo=category_repo,
+        bank_account_repo=bank_account_repo,
     )
 
     # Obtener transacción
@@ -205,8 +215,11 @@ async def update_transaction(
     # Inicializar repositorios y servicio
     transaction_repo = TransactionRepository(db)
     category_repo = CategoryRepository(db)
+    bank_account_repo = BankAccountRepository(db)
     transaction_service = TransactionService(
-        transaction_repo=transaction_repo, category_repo=category_repo
+        transaction_repo=transaction_repo,
+        category_repo=category_repo,
+        bank_account_repo=bank_account_repo,
     )
 
     # Actualizar transacción
@@ -242,8 +255,11 @@ async def delete_transaction(
     # Inicializar repositorios y servicio
     transaction_repo = TransactionRepository(db)
     category_repo = CategoryRepository(db)
+    bank_account_repo = BankAccountRepository(db)
     transaction_service = TransactionService(
-        transaction_repo=transaction_repo, category_repo=category_repo
+        transaction_repo=transaction_repo,
+        category_repo=category_repo,
+        bank_account_repo=bank_account_repo,
     )
 
     # Eliminar transacción
@@ -303,8 +319,11 @@ async def create_ocr_transaction(
     # Inicializar servicios
     transaction_repo = TransactionRepository(db)
     category_repo = CategoryRepository(db)
+    bank_account_repo = BankAccountRepository(db)
     transaction_service = TransactionService(
-        transaction_repo=transaction_repo, category_repo=category_repo
+        transaction_repo=transaction_repo,
+        category_repo=category_repo,
+        bank_account_repo=bank_account_repo,
     )
 
     # Procesar imagen con OCR

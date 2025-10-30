@@ -5,6 +5,7 @@
 
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import * as api from '../services/api';
+import * as bankAccountApi from '../services/bankAccountApi';
 
 const AppContext = createContext();
 
@@ -25,6 +26,10 @@ export const AppProvider = ({ children }) => {
     // Estado de categorías (cache)
     const [categories, setCategories] = useState([]);
     const [categoriesLoading, setCategoriesLoading] = useState(false);
+
+    // Estado de cuentas bancarias (cache)
+    const [bankAccounts, setBankAccounts] = useState([]);
+    const [bankAccountsLoading, setBankAccountsLoading] = useState(false);
 
     // Estado de notificaciones
     const [notifications, setNotifications] = useState([]);
@@ -262,6 +267,93 @@ export const AppProvider = ({ children }) => {
         }
     }, [categories.length, loadCategories, loadTransactions, showNotification]);
 
+    /**
+     * Cargar cuentas bancarias
+     */
+    const loadBankAccounts = useCallback(async (force = false) => {
+        // Si ya tenemos cuentas y no forzamos recarga, no hacer nada
+        if (bankAccounts.length > 0 && !force) {
+            return bankAccounts;
+        }
+
+        try {
+            setBankAccountsLoading(true);
+            const response = await bankAccountApi.listBankAccounts();
+            setBankAccounts(response.accounts || []);
+            return response.accounts || [];
+        } catch (error) {
+            showNotification('Error al cargar cuentas bancarias', 'error');
+            console.error('Error loading bank accounts:', error);
+            return [];
+        } finally {
+            setBankAccountsLoading(false);
+        }
+    }, [bankAccounts, showNotification]);
+
+    /**
+     * Crear cuenta bancaria
+     */
+    const createBankAccount = useCallback(async (accountData) => {
+        try {
+            setGlobalLoading(true);
+            const account = await bankAccountApi.createBankAccount(accountData);
+
+            // Actualizar lista local
+            setBankAccounts(prev => [...prev, account]);
+
+            showNotification('Cuenta bancaria creada exitosamente', 'success');
+            return account;
+        } catch (error) {
+            showNotification(error.message || 'Error al crear cuenta bancaria', 'error');
+            throw error;
+        } finally {
+            setGlobalLoading(false);
+        }
+    }, [showNotification]);
+
+    /**
+     * Actualizar cuenta bancaria
+     */
+    const updateBankAccount = useCallback(async (accountId, updateData) => {
+        try {
+            setGlobalLoading(true);
+            const updated = await bankAccountApi.updateBankAccount(accountId, updateData);
+
+            // Actualizar lista local
+            setBankAccounts(prev =>
+                prev.map(acc => acc.id === accountId ? updated : acc)
+            );
+
+            showNotification('Cuenta bancaria actualizada', 'success');
+            return updated;
+        } catch (error) {
+            showNotification(error.message || 'Error al actualizar cuenta bancaria', 'error');
+            throw error;
+        } finally {
+            setGlobalLoading(false);
+        }
+    }, [showNotification]);
+
+    /**
+     * Eliminar cuenta bancaria
+     */
+    const deleteBankAccount = useCallback(async (accountId) => {
+        try {
+            setGlobalLoading(true);
+            await bankAccountApi.deleteBankAccount(accountId);
+
+            // Remover de lista local
+            setBankAccounts(prev => prev.filter(acc => acc.id !== accountId));
+
+            showNotification('Cuenta bancaria eliminada', 'success');
+        } catch (error) {
+            showNotification(error.message || 'Error al eliminar cuenta bancaria', 'error');
+            throw error;
+        } finally {
+            setGlobalLoading(false);
+        }
+    }, [showNotification]);
+
     // Verificar autenticación al montar
     useEffect(() => {
         const checkAuth = async () => {
@@ -290,6 +382,13 @@ export const AppProvider = ({ children }) => {
         }
     }, [isAuthenticated, categories.length, loadCategories]);
 
+    // Cargar cuentas bancarias al autenticarse
+    useEffect(() => {
+        if (isAuthenticated && bankAccounts.length === 0) {
+            loadBankAccounts();
+        }
+    }, [isAuthenticated, bankAccounts.length, loadBankAccounts]);
+
     const value = {
         // Autenticación
         user,
@@ -304,6 +403,14 @@ export const AppProvider = ({ children }) => {
         categoriesLoading,
         loadCategories,
         getCategoriesByType,
+
+        // Cuentas bancarias
+        bankAccounts,
+        bankAccountsLoading,
+        loadBankAccounts,
+        createBankAccount,
+        updateBankAccount,
+        deleteBankAccount,
 
         // Transacciones
         transactions,

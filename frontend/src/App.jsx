@@ -11,6 +11,7 @@ import NotificationContainer from './components/common/NotificationContainer';
 import Loading from './components/common/Loading';
 import ManualRecordModal from './components/transactions/ManualRecordModal';
 import VisualRecordModal from './components/transactions/VisualRecordModal';
+import { BankAccountList } from './components/bank-accounts';
 
 // Importar Font Awesome
 import './styles/globals.css';
@@ -80,18 +81,8 @@ function AppContent() {
 
             {activePage === 'accounts' && (
                 <div className="accounts-container" style={{ display: 'block' }}>
-                    {/* AccountsPage component - to be implemented */}
                     <div className="container">
-                        <div style={{ padding: '40px', textAlign: 'center' }}>
-                            <h2>Accounts</h2>
-                            <p>Esta página se implementará próximamente</p>
-                            <button
-                                className="btn btn-primary"
-                                onClick={() => handleNavigate('dashboard')}
-                            >
-                                Volver al Dashboard
-                            </button>
-                        </div>
+                        <BankAccountList />
                     </div>
                 </div>
             )}

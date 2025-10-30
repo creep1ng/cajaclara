@@ -2,7 +2,7 @@
 Modelo de cuenta bancaria para gestión de cuentas del usuario.
 """
 
-from sqlalchemy import Column, Numeric, String, ForeignKey
+from sqlalchemy import Column, ForeignKey, Numeric, String
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 
@@ -54,6 +54,12 @@ class BankAccount(Base, UUIDMixin, TimestampMixin):
     user = relationship(
         "User",
         back_populates="bank_accounts"
+    )
+    
+    transactions = relationship(
+        "Transaction",
+        back_populates="bank_account",
+        cascade="all, delete-orphan"
     )
     
     def __repr__(self) -> str:

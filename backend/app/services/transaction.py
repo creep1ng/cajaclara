@@ -2,9 +2,11 @@
 Servicio de lógica de negocio para transacciones.
 """
 
+from decimal import Decimal
 from uuid import UUID
 
 from app.core.exceptions import NotFoundError, ValidationError
+from app.repositories.bank_account import BankAccountRepository
 from app.repositories.category import CategoryRepository
 from app.repositories.transaction import TransactionRepository
 from app.schemas.transaction import (CreateManualTransactionRequest,
@@ -18,6 +20,7 @@ class TransactionService:
         self,
         transaction_repo: TransactionRepository,
         category_repo: CategoryRepository,
+        bank_account_repo: BankAccountRepository,
     ):
         """
         Inicializa el servicio de transacciones.
@@ -25,9 +28,48 @@ class TransactionService:
         Args:
             transaction_repo: Repositorio de transacciones
             category_repo: Repositorio de categorías
+            bank_account_repo: Repositorio de cuentas bancarias
         """
         self.transaction_repo = transaction_repo
         self.category_repo = category_repo
+        self.bank_account_repo = bank_account_repo
+
+    async def _update_account_balance(
+        self,
+        account_id: UUID,
+        user_id: UUID,
+        amount: Decimal,
+        transaction_type: str,
+    ) -> None:
+        """
+        Actualiza el saldo de una cuenta bancaria según la transacción.
+
+        Args:
+            account_id: UUID de la cuenta bancaria
+            user_id: UUID del usuario propietario
+            amount: Monto de la transacción
+            transaction_type: Tipo de transacción (income, expense, transfer)
+        """
+        account = await self.bank_account_repo.get_by_id_for_user(account_id, user_id)
+        if account is None:
+            raise NotFoundError(
+                code="BANK_ACCOUNT_NOT_FOUND",
+                message=f"Bank account '{account_id}' not found",
+                details={"account_id": str(account_id)},
+            )
+
+        # Calcular nuevo saldo
+        if transaction_type == "income":
+            new_balance = account.current_balance + amount
+        elif transaction_type == "expense":
+            new_balance = account.current_balance - amount
+        else:  # transfer - se maneja en el método de transferencia
+            return
+
+        # Actualizar saldo
+        await self.bank_account_repo.update(
+            account_id, {"current_balance": new_balance}
+        )
 
     async def create_manual_transaction(
         self, user_id: UUID, data: CreateManualTransactionRequest
@@ -99,6 +141,7 @@ class TransactionService:
             "classification": data.classification,
             "transaction_date": data.transaction_date,
             "entrepreneurship_id": data.entrepreneurship_id,
+            "bank_account_id": data.bank_account_id,
             "from_account": data.from_account,
             "to_account": data.to_account,
             "tags": data.tags or [],
@@ -108,6 +151,15 @@ class TransactionService:
         }
 
         transaction = await self.transaction_repo.create(transaction_data)
+
+        # Actualizar saldo de cuenta bancaria si se proporcionó
+        if data.bank_account_id:
+            await self._update_account_balance(
+                account_id=data.bank_account_id,
+                user_id=user_id,
+                amount=data.amount,
+                transaction_type=data.transaction_type,
+            )
 
         # Cargar con categoría para la respuesta
         transaction_with_category = (

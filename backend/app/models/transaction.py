@@ -50,6 +50,13 @@ class Transaction(Base, UUIDMixin, TimestampMixin, SoftDeleteMixin, AuditMixin):
         comment="Categoría de la transacción"
     )
     
+    bank_account_id = Column(
+        UUID(as_uuid=True),
+        ForeignKey("bank_accounts.id", ondelete="SET NULL"),
+        nullable=True,
+        comment="Cuenta bancaria asociada"
+    )
+    
     # Transaction Data
     amount = Column(
         Numeric(15, 2),
@@ -137,6 +144,11 @@ class Transaction(Base, UUIDMixin, TimestampMixin, SoftDeleteMixin, AuditMixin):
     
     category = relationship(
         "Category",
+        back_populates="transactions"
+    )
+    
+    bank_account = relationship(
+        "BankAccount",
         back_populates="transactions"
     )
     
