@@ -7,9 +7,10 @@ from decimal import Decimal
 from typing import Any, Dict, List, Optional
 from uuid import UUID
 
+from pydantic import BaseModel, ConfigDict, Field
+
 from app.schemas.category import CategoryResponse
 from app.schemas.common import PaginationInfo
-from pydantic import BaseModel, ConfigDict, Field
 
 
 class TransactionBase(BaseModel):

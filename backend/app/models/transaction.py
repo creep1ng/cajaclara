@@ -4,12 +4,11 @@ Modelo de transacciones financieras.
 
 from typing import Any, Optional
 
-from app.models.base import (AuditMixin, Base, SoftDeleteMixin, TimestampMixin,
-                             UUIDMixin)
-from sqlalchemy import (ARRAY, Column, DateTime, ForeignKey, Index, Numeric,
-                        String, Text)
+from sqlalchemy import ARRAY, Column, DateTime, ForeignKey, Index, Numeric, String, Text
 from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import relationship
+
+from app.models.base import AuditMixin, Base, SoftDeleteMixin, TimestampMixin, UUIDMixin
 
 
 class Transaction(Base, UUIDMixin, TimestampMixin, SoftDeleteMixin, AuditMixin):
