@@ -27,24 +27,32 @@ const PAYMENT_STATUS = [
 ];
 
 export default function ManualRecordModal({ isOpen, onClose, onSuccess }) {
-    const { categories, getCategoriesByType, createTransaction, showNotification } = useApp();
+    const { 
+        categories, 
+        getCategoriesByType, 
+        createTransaction, 
+        showNotification,
+        bankAccounts,
+        bankAccountsLoading,
+        loadBankAccounts
+    } = useApp();
     const [activeType, setActiveType] = useState('expense');
     const [loading, setLoading] = useState(false);
     const [labels, setLabels] = useState([]);
     const [formData, setFormData] = useState({
         amount: '',
-        account: 'cash',
+        bank_account_id: '',
         category_id: '',
         description: '',
         payer: '',
         payment_type: 'cash',
         payment_status: 'cleared',
         transaction_date: '',
-        from_account: 'cash',
-        to_account: 'savings',
+        from_bank_account_id: '',
+        to_bank_account_id: '',
     });
 
-    // Inicializar fecha/hora actual
+    // Inicializar fecha/hora actual y cargar cuentas bancarias
     useEffect(() => {
         if (isOpen) {
             const now = new Date();
@@ -58,8 +66,13 @@ export default function ManualRecordModal({ isOpen, onClose, onSuccess }) {
                 ...prev,
                 transaction_date: `${year}-${month}-${day}T${hours}:${minutes}`,
             }));
+
+            // Cargar cuentas bancarias si no están cargadas
+            if (bankAccounts.length === 0 && !bankAccountsLoading) {
+                loadBankAccounts();
+            }
         }
-    }, [isOpen]);
+    }, [isOpen, bankAccounts.length, bankAccountsLoading, loadBankAccounts]);
 
     const handleTypeChange = (type) => {
         setActiveType(type);
@@ -106,21 +119,21 @@ export default function ManualRecordModal({ isOpen, onClose, onSuccess }) {
         }
 
         if (activeType === 'transfer') {
-            if (!formData.from_account) {
+            if (!formData.from_bank_account_id) {
                 showNotification('Por favor selecciona una cuenta de salida', 'error');
                 return false;
             }
-            if (!formData.to_account) {
+            if (!formData.to_bank_account_id) {
                 showNotification('Por favor selecciona una cuenta de entrada', 'error');
                 return false;
             }
-            if (formData.from_account === formData.to_account) {
+            if (formData.from_bank_account_id === formData.to_bank_account_id) {
                 showNotification('La cuenta de salida y entrada no pueden ser iguales', 'error');
                 return false;
             }
         } else {
-            if (!formData.account) {
-                showNotification('Por favor selecciona una cuenta', 'error');
+            if (!formData.bank_account_id) {
+                showNotification('Por favor selecciona una cuenta bancaria', 'error');
                 return false;
             }
             if (!formData.category_id) {
@@ -148,9 +161,10 @@ export default function ManualRecordModal({ isOpen, onClose, onSuccess }) {
 
             // Agregar campos específicos según el tipo de transacción
             if (activeType === 'transfer') {
-                transactionData.from_account = formData.from_account;
-                transactionData.to_account = formData.to_account;
+                transactionData.from_bank_account_id = formData.from_bank_account_id;
+                transactionData.to_bank_account_id = formData.to_bank_account_id;
             } else {
+                transactionData.bank_account_id = formData.bank_account_id;
                 transactionData.category_id = formData.category_id;
             }
 
@@ -165,15 +179,15 @@ export default function ManualRecordModal({ isOpen, onClose, onSuccess }) {
                 // Resetear formulario pero mantener tipo de transacción
                 setFormData({
                     amount: '',
-                    account: 'cash',
+                    bank_account_id: formData.bank_account_id,
                     category_id: '',
                     description: '',
                     payer: '',
                     payment_type: 'cash',
                     payment_status: 'cleared',
                     transaction_date: formData.transaction_date,
-                    from_account: 'cash',
-                    to_account: 'savings',
+                    from_bank_account_id: '',
+                    to_bank_account_id: '',
                 });
                 setLabels([]);
             } else {
@@ -191,13 +205,15 @@ export default function ManualRecordModal({ isOpen, onClose, onSuccess }) {
         if (!loading) {
             setFormData({
                 amount: '',
-                account: 'cash',
+                bank_account_id: '',
                 category_id: '',
                 description: '',
                 payer: '',
                 payment_type: 'cash',
                 payment_status: 'cleared',
                 transaction_date: '',
+                from_bank_account_id: '',
+                to_bank_account_id: '',
             });
             setLabels([]);
             onClose();
@@ -247,26 +263,33 @@ export default function ManualRecordModal({ isOpen, onClose, onSuccess }) {
                         </div>
                     </div>
 
-                    {/* Cuenta - Solo para Gasto e Ingreso */}
+                    {/* Cuenta Bancaria - Solo para Gasto e Ingreso */}
                     {activeType !== 'transfer' && (
                         <div className="form-group">
                             <label className="form-label">
-                                Cuenta <span className="required">*</span>
+                                Cuenta Bancaria <span className="required">*</span>
                             </label>
                             <div className="select-wrapper">
                                 <select
-                                    name="account"
+                                    name="bank_account_id"
                                     className="form-select"
-                                    value={formData.account}
+                                    value={formData.bank_account_id}
                                     onChange={handleChange}
-                                    disabled={loading}
+                                    disabled={loading || bankAccountsLoading}
                                 >
-                                    <option value="cash">Efectivo</option>
-                                    <option value="savings">Ahorros</option>
-                                    <option value="checking">Corriente</option>
-                                    <option value="credit">Tarjeta de Crédito</option>
+                                    <option value="">Seleccionar cuenta...</option>
+                                    {bankAccounts.map((account) => (
+                                        <option key={account.id} value={account.id}>
+                                            {account.name} - ${account.saldo_actual?.toLocaleString('es-CO')}
+                                        </option>
+                                    ))}
                                 </select>
                             </div>
+                            {bankAccounts.length === 0 && !bankAccountsLoading && (
+                                <p className="form-hint" style={{ color: 'var(--error)', marginTop: '8px' }}>
+                                    ⚠️ No hay cuentas bancarias. Crea una en Accounts.
+                                </p>
+                            )}
                         </div>
                     )}
 
@@ -279,18 +302,25 @@ export default function ManualRecordModal({ isOpen, onClose, onSuccess }) {
                                 </label>
                                 <div className="select-wrapper">
                                     <select
-                                        name="from_account"
+                                        name="from_bank_account_id"
                                         className="form-select"
-                                        value={formData.from_account}
+                                        value={formData.from_bank_account_id}
                                         onChange={handleChange}
-                                        disabled={loading}
+                                        disabled={loading || bankAccountsLoading}
                                     >
-                                        <option value="cash">Efectivo</option>
-                                        <option value="savings">Ahorros</option>
-                                        <option value="checking">Corriente</option>
-                                        <option value="credit">Tarjeta de Crédito</option>
+                                        <option value="">Seleccionar cuenta...</option>
+                                        {bankAccounts.map((account) => (
+                                            <option key={account.id} value={account.id}>
+                                                {account.name} - ${account.saldo_actual?.toLocaleString('es-CO')}
+                                            </option>
+                                        ))}
                                     </select>
                                 </div>
+                                {bankAccounts.length === 0 && !bankAccountsLoading && (
+                                    <p className="form-hint" style={{ color: 'var(--error)', marginTop: '8px' }}>
+                                        ⚠️ No hay cuentas bancarias. Crea una en Accounts.
+                                    </p>
+                                )}
                             </div>
 
                             <div className="form-group">
@@ -299,18 +329,25 @@ export default function ManualRecordModal({ isOpen, onClose, onSuccess }) {
                                 </label>
                                 <div className="select-wrapper">
                                     <select
-                                        name="to_account"
+                                        name="to_bank_account_id"
                                         className="form-select"
-                                        value={formData.to_account}
+                                        value={formData.to_bank_account_id}
                                         onChange={handleChange}
-                                        disabled={loading}
+                                        disabled={loading || bankAccountsLoading}
                                     >
-                                        <option value="cash">Efectivo</option>
-                                        <option value="savings">Ahorros</option>
-                                        <option value="checking">Corriente</option>
-                                        <option value="credit">Tarjeta de Crédito</option>
+                                        <option value="">Seleccionar cuenta...</option>
+                                        {bankAccounts.map((account) => (
+                                            <option key={account.id} value={account.id}>
+                                                {account.name} - ${account.saldo_actual?.toLocaleString('es-CO')}
+                                            </option>
+                                        ))}
                                     </select>
                                 </div>
+                                {bankAccounts.length === 0 && !bankAccountsLoading && (
+                                    <p className="form-hint" style={{ color: 'var(--error)', marginTop: '8px' }}>
+                                        ⚠️ No hay cuentas bancarias. Crea una en Accounts.
+                                    </p>
+                                )}
                             </div>
                         </>
                     )}
