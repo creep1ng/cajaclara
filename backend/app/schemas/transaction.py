@@ -7,9 +7,10 @@ from decimal import Decimal
 from typing import Any, Dict, List, Optional
 from uuid import UUID
 
+from pydantic import BaseModel, ConfigDict, Field
+
 from app.schemas.category import CategoryResponse
 from app.schemas.common import PaginationInfo
-from pydantic import BaseModel, ConfigDict, Field
 
 
 class TransactionBase(BaseModel):
@@ -29,6 +30,7 @@ class CreateManualTransactionRequest(TransactionBase):
 
     category_id: Optional[str] = Field(None, max_length=50)
     entrepreneurship_id: Optional[UUID] = None
+    bank_account_id: Optional[UUID] = Field(None, description="Cuenta bancaria asociada")
     from_account: Optional[str] = Field(None, max_length=50)
     to_account: Optional[str] = Field(None, max_length=50)
 

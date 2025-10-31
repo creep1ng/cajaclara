@@ -2,15 +2,14 @@
 Tests para funcionalidad de cuentas bancarias.
 """
 
-import pytest
 from decimal import Decimal
 from uuid import uuid4
 
-from httpx import AsyncClient
-from sqlalchemy.ext.asyncio import AsyncSession
-
+import pytest
 from app.models.bank_account import BankAccount
 from app.models.user import User
+from httpx import AsyncClient
+from sqlalchemy.ext.asyncio import AsyncSession
 
 
 class TestBankAccountsEndpoints:
@@ -369,8 +368,8 @@ class TestBankAccountService:
     ):
         """Test que current_balance se inicializa con initial_balance si no se provee"""
         from app.repositories.bank_account import BankAccountRepository
-        from app.services.bank_account_service import BankAccountService
         from app.schemas.bank_account import CreateBankAccountRequest
+        from app.services.bank_account_service import BankAccountService
         
         repo = BankAccountRepository(db)
         service = BankAccountService(repo)
@@ -389,10 +388,10 @@ class TestBankAccountService:
     @pytest.mark.asyncio
     async def test_validate_color_format(self, db: AsyncSession, test_user: User):
         """Test validación de formato de color hexadecimal"""
-        from app.repositories.bank_account import BankAccountRepository
-        from app.services.bank_account_service import BankAccountService
-        from app.schemas.bank_account import CreateBankAccountRequest
         from app.core.exceptions import ValidationError
+        from app.repositories.bank_account import BankAccountRepository
+        from app.schemas.bank_account import CreateBankAccountRequest
+        from app.services.bank_account_service import BankAccountService
         
         repo = BankAccountRepository(db)
         service = BankAccountService(repo)

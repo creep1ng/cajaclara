@@ -5,6 +5,7 @@ Inicialización de base de datos con datos por defecto.
 from uuid import UUID
 
 from app.config import settings
+from app.models.bank_account import BankAccount
 from app.models.category import Category
 from app.models.user import User
 from app.utils.auth import hash_password
@@ -26,6 +27,9 @@ async def init_db(db: AsyncSession) -> None:
     
     # Seed de categorías
     await seed_categories(db)
+    
+    # Seed de cuentas bancarias
+    await seed_bank_accounts(db)
     
     print("✅ Base de datos inicializada correctamente")
 
@@ -214,3 +218,56 @@ async def seed_categories(db: AsyncSession) -> None:
     
     await db.commit()
     print(f"✓ {len(categories)} categorías creadas")
+
+
+async def seed_bank_accounts(db: AsyncSession) -> None:
+    """Crea cuentas bancarias por defecto para el usuario demo si no existen"""
+    result = await db.execute(
+        select(BankAccount).where(BankAccount.user_id == UUID(settings.DEFAULT_USER_ID))
+    )
+    existing = result.scalars().all()
+    
+    if len(existing) > 0:
+        print(f"✓ Cuentas bancarias ya existen ({len(existing)} cuentas)")
+        return
+    
+    # Obtener el usuario default
+    user_result = await db.execute(
+        select(User).where(User.id == UUID(settings.DEFAULT_USER_ID))
+    )
+    default_user = user_result.scalar_one_or_none()
+    
+    if default_user is None:
+        print("⚠ Usuario default no encontrado, no se pueden crear cuentas bancarias")
+        return
+    
+    bank_accounts = [
+        {
+            "user_id": UUID(settings.DEFAULT_USER_ID),
+            "name": "Ahorros",
+            "color": "#00B894",
+            "initial_balance": 500000.00,
+            "current_balance": 500000.00
+        },
+        {
+            "user_id": UUID(settings.DEFAULT_USER_ID),
+            "name": "Tarjeta Débito",
+            "color": "#4ECDC4",
+            "initial_balance": 1200000.00,
+            "current_balance": 1200000.00
+        },
+        {
+            "user_id": UUID(settings.DEFAULT_USER_ID),
+            "name": "Efectivo",
+            "color": "#FFD93D",
+            "initial_balance": 150000.00,
+            "current_balance": 150000.00
+        },
+    ]
+    
+    for account_data in bank_accounts:
+        bank_account = BankAccount(**account_data)
+        db.add(bank_account)
+    
+    await db.commit()
+    print(f"✓ {len(bank_accounts)} cuentas bancarias creadas para usuario demo")
