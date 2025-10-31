@@ -29,7 +29,7 @@ export default function AccountsCard({ accounts, onAddAccount }) {
                         <div key={account.id} className="account-item">
                             <span className="account-name">{account.name}</span>
                             <span className="account-amount">
-                                {formatCurrency(account.balance || 0)}
+                                {formatCurrency(account.current_balance || 0)}
                             </span>
                         </div>
                     ))

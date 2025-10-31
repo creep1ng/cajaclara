@@ -14,12 +14,11 @@ import DateSelector from './DateSelector';
 import AccountsCard from './AccountsCard';
 
 export default function Dashboard({ onNavigate, onOpenModal }) {
-    const { transactions, refreshDashboard } = useApp();
+    const { transactions, refreshDashboard, bankAccounts } = useApp();
     const [selectedDate, setSelectedDate] = useState({
         month: new Date().getMonth(),
         year: new Date().getFullYear(),
     });
-    const [accounts, setAccounts] = useState([]);
     const [dashboardData, setDashboardData] = useState({
         balance: 0,
         gauges: {
@@ -150,7 +149,7 @@ export default function Dashboard({ onNavigate, onOpenModal }) {
                             onDateChange={handleDateChange}
                         />
                         <AccountsCard
-                            accounts={accounts}
+                            accounts={bankAccounts}
                             onAddAccount={handleAddAccount}
                         />
                     </div>

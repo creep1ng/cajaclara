@@ -17,7 +17,7 @@ import { BankAccountList } from './components/bank-accounts';
 import './styles/globals.css';
 
 function AppContent() {
-    const { isAuthenticated, authLoading } = useApp();
+    const { isAuthenticated, authLoading, loadBankAccounts } = useApp();
     const [activePage, setActivePage] = useState('dashboard');
     const [activeModal, setActiveModal] = useState(null);
 
@@ -34,8 +34,8 @@ function AppContent() {
     };
 
     const handleModalSuccess = () => {
-        // Refresh dashboard data
-        // This is automatically handled by AppContext
+        // Refresh bank accounts data after transaction creation
+        loadBankAccounts(true);
     };
 
     // Mostrar loading mientras se verifica autenticación
