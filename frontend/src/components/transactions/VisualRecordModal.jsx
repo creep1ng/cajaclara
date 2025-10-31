@@ -30,7 +30,7 @@ export default function VisualRecordModal({ isOpen, onClose, onSuccess }) {
     });
     const [errors, setErrors] = useState({});
     const [dragActive, setDragActive] = useState(false);
-    
+
     const fileInputRef = useRef(null);
     const formRef = useRef(null);
 
@@ -98,7 +98,7 @@ export default function VisualRecordModal({ isOpen, onClose, onSuccess }) {
             ...prev,
             [name]: value,
         }));
-        
+
         // Limpiar error del campo
         if (errors[name]) {
             setErrors((prev) => ({
@@ -122,7 +122,7 @@ export default function VisualRecordModal({ isOpen, onClose, onSuccess }) {
         e.preventDefault();
         e.stopPropagation();
         setDragActive(false);
-        
+
         if (e.dataTransfer.files && e.dataTransfer.files[0]) {
             validateAndProcessFile(e.dataTransfer.files[0]);
         }
@@ -136,7 +136,7 @@ export default function VisualRecordModal({ isOpen, onClose, onSuccess }) {
 
         setOcrProcessing(true);
         setErrors({});
-        
+
         try {
             showNotification('🔍 Analizando imagen con OCR...', 'info');
 
@@ -162,22 +162,29 @@ export default function VisualRecordModal({ isOpen, onClose, onSuccess }) {
             setOcrResults(result.ocr_details);
 
             // Autocompletar campos con datos del OCR
-            setFormData((prev) => ({
-                ...prev,
-                amount: result.amount ? result.amount.toString() : prev.amount,
-                category_id: result.category?.id || prev.category_id,
-                date: result.transaction_date
-                    ? new Date(result.transaction_date).toISOString().split('T')[0]
-                    : prev.date,
-                notes: result.description || prev.notes,
-            }));
+            setFormData((prev) => {
+                // Sanitize notes: remove Markdown code fences like ```json or ``` that may come from OCR output
+                const rawNotes = result.description || prev.notes;
+                const cleanNotes = rawNotes
+                    ? rawNotes.replace(/```json\s*/g, '').replace(/```/g, '').trim()
+                    : rawNotes;
+                return {
+                    ...prev,
+                    amount: result.amount ? result.amount.toString() : prev.amount,
+                    category_id: result.category?.id || prev.category_id,
+                    date: result.transaction_date
+                        ? new Date(result.transaction_date).toISOString().split('T')[0]
+                        : prev.date,
+                    notes: cleanNotes,
+                };
+            });
 
             showNotification('✅ Imagen procesada exitosamente', 'success');
             setActiveTab('review');
-            
+
         } catch (error) {
             console.error('OCR Error:', error);
-            
+
             // Manejo específico de errores
             if (error.code === 'INVALID_FILE_TYPE') {
                 setErrors({ image: 'Tipo de archivo no válido' });
@@ -188,7 +195,7 @@ export default function VisualRecordModal({ isOpen, onClose, onSuccess }) {
             } else {
                 setErrors({ image: 'Error al procesar la imagen. Intenta con el registro manual.' });
             }
-            
+
             showNotification(
                 '❌ Error al procesar la imagen. Por favor, intenta con el registro manual.',
                 'error'
@@ -200,19 +207,19 @@ export default function VisualRecordModal({ isOpen, onClose, onSuccess }) {
 
     const validateForm = useCallback(() => {
         const newErrors = {};
-        
+
         if (!formData.amount || parseFloat(formData.amount) <= 0) {
             newErrors.amount = 'Por favor ingresa un monto válido';
         }
-        
+
         if (!formData.category_id) {
             newErrors.category_id = 'Por favor selecciona una categoría';
         }
-        
+
         if (!formData.date) {
             newErrors.date = 'Por favor selecciona una fecha';
         }
-        
+
         setErrors(newErrors);
         return Object.keys(newErrors).length === 0;
     }, [formData]);
@@ -274,14 +281,14 @@ export default function VisualRecordModal({ isOpen, onClose, onSuccess }) {
     // Calcular confianza general del OCR
     const getOverallConfidence = useCallback(() => {
         if (!ocrResults) return 0;
-        
+
         const weights = {
             amount_confidence: 0.3,
             fecha_confidence: 0.2,
             category_confidence: 0.3,
             vendor_confidence: 0.2
         };
-        
+
         return Object.entries(weights).reduce((total, [key, weight]) => {
             return total + (ocrResults[key] || 0) * weight;
         }, 0);
@@ -303,8 +310,8 @@ export default function VisualRecordModal({ isOpen, onClose, onSuccess }) {
         <Modal isOpen={isOpen} onClose={handleClose} size="large" ariaLabel="Modal de registro visual con OCR">
             <div className="visual-record-header">
                 <h2 className="visual-record-title">Registro Visual con OCR</h2>
-                <button 
-                    className="visual-record-close" 
+                <button
+                    className="visual-record-close"
                     onClick={handleClose}
                     aria-label="Cerrar modal"
                 >
@@ -352,7 +359,7 @@ export default function VisualRecordModal({ isOpen, onClose, onSuccess }) {
                 </div>
 
                 {/* Upload Panel */}
-                <div 
+                <div
                     className={`tab-panel ${activeTab === 'upload' ? 'active' : ''}`}
                     id="upload-panel"
                     role="tabpanel"
@@ -395,20 +402,20 @@ export default function VisualRecordModal({ isOpen, onClose, onSuccess }) {
                     ) : (
                         <div className="visual-preview-container">
                             <div className="visual-preview">
-                                <img 
-                                    src={imagePreview} 
-                                    alt="Vista previa del recibo" 
+                                <img
+                                    src={imagePreview}
+                                    alt="Vista previa del recibo"
                                     className="preview-image"
                                 />
-                                <button 
-                                    className="preview-remove" 
+                                <button
+                                    className="preview-remove"
                                     onClick={handleRemoveImage}
                                     aria-label="Eliminar imagen"
                                 >
                                     <i className="fas fa-times"></i>
                                 </button>
                             </div>
-                            
+
                             {/* Tipo y clasificación */}
                             <div className="form-row">
                                 <div className="form-group">
@@ -438,7 +445,7 @@ export default function VisualRecordModal({ isOpen, onClose, onSuccess }) {
                                         </label>
                                     </div>
                                 </div>
-                                
+
                                 <div className="form-group">
                                     <label className="form-label">Clasificación</label>
                                     <div className="radio-group">
@@ -467,13 +474,13 @@ export default function VisualRecordModal({ isOpen, onClose, onSuccess }) {
                                     </div>
                                 </div>
                             </div>
-                            
+
                             {errors.image && (
                                 <div className="error-message" role="alert">
                                     {errors.image}
                                 </div>
                             )}
-                            
+
                             <button
                                 className="btn btn-primary btn-large"
                                 onClick={processOCR}
@@ -497,7 +504,7 @@ export default function VisualRecordModal({ isOpen, onClose, onSuccess }) {
                 </div>
 
                 {/* Review Panel */}
-                <div 
+                <div
                     className={`tab-panel ${activeTab === 'review' ? 'active' : ''}`}
                     id="review-panel"
                     role="tabpanel"
@@ -510,7 +517,7 @@ export default function VisualRecordModal({ isOpen, onClose, onSuccess }) {
                                 <h3>Confianza del Procesamiento</h3>
                                 <div className="confidence-overall">
                                     <div className="confidence-bar">
-                                        <div 
+                                        <div
                                             className="confidence-fill"
                                             style={{ width: `${getOverallConfidence() * 100}%` }}
                                         ></div>
@@ -519,7 +526,7 @@ export default function VisualRecordModal({ isOpen, onClose, onSuccess }) {
                                         {Math.round(getOverallConfidence() * 100)}% - {getConfidenceLabel(getOverallConfidence())}
                                     </span>
                                 </div>
-                                
+
                                 <div className="confidence-details">
                                     <div className="confidence-item">
                                         <span>Monto:</span>
@@ -548,13 +555,6 @@ export default function VisualRecordModal({ isOpen, onClose, onSuccess }) {
                                 </div>
                             </div>
 
-                            {/* Texto extraído */}
-                            <div className="ocr-extracted-text">
-                                <h3>Texto Extraído</h3>
-                                <div className="extracted-text-content">
-                                    {ocrResults.extracted_text}
-                                </div>
-                            </div>
 
                             {/* Formulario con datos prellenados */}
                             <form ref={formRef} className="visual-form-grid" onSubmit={(e) => { e.preventDefault(); handleSubmit(); }}>
@@ -709,7 +709,7 @@ export default function VisualRecordModal({ isOpen, onClose, onSuccess }) {
                 </div>
 
                 {/* Manual Panel */}
-                <div 
+                <div
                     className={`tab-panel ${activeTab === 'manual' ? 'active' : ''}`}
                     id="manual-panel"
                     role="tabpanel"
@@ -744,7 +744,7 @@ export default function VisualRecordModal({ isOpen, onClose, onSuccess }) {
                                 </label>
                             </div>
                         </div>
-                        
+
                         <div className="form-group">
                             <label className="form-label">Clasificación</label>
                             <div className="radio-group">
@@ -921,7 +921,7 @@ export default function VisualRecordModal({ isOpen, onClose, onSuccess }) {
                     </form>
                 </div>
             </div>
-            
+
             {/* Indicador de progreso OCR */}
             <OCRProgressIndicator
                 isActive={ocrProcessing}
